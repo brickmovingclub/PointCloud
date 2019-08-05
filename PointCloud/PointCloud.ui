@@ -40,6 +40,7 @@
     </property>
     <addaction name="actionImport_file"/>
     <addaction name="actionPclShow"/>
+    <addaction name="actionSave_as"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -60,6 +61,11 @@
   <action name="actionPclShow">
    <property name="text">
     <string>PclShow</string>
+   </property>
+  </action>
+  <action name="actionSave_as">
+   <property name="text">
+    <string>Save as</string>
    </property>
   </action>
  </widget>
@@ -107,9 +113,26 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionSave_as</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>PointCloudClass</receiver>
+   <slot>SaveAsPlY()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnReadFile()</slot>
   <slot>PCL()</slot>
+  <slot>SaveAsPlY()</slot>
  </slots>
 </ui>

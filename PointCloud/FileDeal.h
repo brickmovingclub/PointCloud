@@ -10,4 +10,8 @@ private:
 	void writeFile();
 public:
 	int test();
+private:
+	vector<string> file;
+	int point_count = 0;
+
 };

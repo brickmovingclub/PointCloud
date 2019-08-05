@@ -31,7 +31,13 @@ void PointCloud::OnReadFile()
 	if (fileName.isEmpty())
 		return;
 	fs::path fileFullName = fileName.toStdWString().c_str();
-	_pclViewer.ReadPcdFile(_cloud, fileFullName);
+	if(fileFullName.extension() == ".pcd")
+		_pclViewer.ReadPcdFile(_cloud, fileFullName);
+	else if (fileFullName.extension() == ".asc")
+	{
+		_pclViewer.AscToPcd(fileFullName);
+		_pclViewer.ReadPcdFile(_cloud, fileFullName.filename().string() + ".pcd");
+	}
 
 	_viewer->addPointCloud(_cloud, "cloud");
 	_viewer->resetCamera();
@@ -43,4 +49,9 @@ void PointCloud::PCL()
 	FileDeal f;
 	f.fileChange();
 	f.test();
+}
+
+void PointCloud::SaveAsPlY()
+{
+
 }

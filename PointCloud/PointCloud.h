@@ -22,5 +22,6 @@ private:
 private slots:
 	void OnReadFile();								//	读pcd文件槽函数
 	void PCL();							//	pcl直接显示
+	void SaveAsPlY();					//		保存为ply格式
 
 };

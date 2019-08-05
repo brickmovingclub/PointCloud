@@ -56,7 +56,7 @@ void PCLViewer::ReadPcdFile(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud, const
 		i++;
 
 	}
-
+	free(buffer);
 
 }
 
@@ -93,4 +93,47 @@ void PCLViewer::ReadBuffer(const fs::path &fileDir, char **buffer)
 		return;
 	}
 	fclose(pFile);
+}
+
+void PCLViewer::AscToPcd(const fs::path &fileName)
+{
+	if (fileName.extension() != ".asc")
+		return;
+	vector<string> file;
+	int point_count = 0;
+
+	// TODO: 在此处添加实现代码.
+	string s;
+	ifstream f;
+	f.open(fileName.string(), ios::in);
+	while (!f.eof())
+	{
+		getline(f, s);
+		file.push_back(s);
+		point_count++;
+	}
+	if (s == "\n" || s == "")
+		point_count--;
+	f.close();
+
+
+
+	// TODO: 在此处添加实现代码.
+	fs::path  pathFileNamePCD = fileName.filename().string() + ".pcd";
+	ofstream file_write(pathFileNamePCD.string(), ios::out);
+	file_write << "# .PCD v.5 - Point Cloud Data file format" << "\n";
+	file_write << "VERSION .5" << "\n";
+	file_write << "FIELDS x y z" << "\n";
+	file_write << "SIZE 4 4 4" << "\n";
+	file_write << "TYPE F F F" << "\n";
+	file_write << "COUNT 1 1 1" << "\n";
+	file_write << "WIDTH " << point_count << "\n";
+	file_write << "HEIGHT 1" << "\n";
+	file_write << "POINTS " << point_count << "\n";
+	file_write << "DATA ascii" << "\n";
+	for (auto it = file.begin(); it != file.end(); it++)
+		file_write << *it << '\n';
+	//file_write << it << endl;
+
+	file_write.close();
 }

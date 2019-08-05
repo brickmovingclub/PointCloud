@@ -27,6 +27,7 @@ class Ui_PointCloudClass
 public:
     QAction *actionImport_file;
     QAction *actionPclShow;
+    QAction *actionSave_as;
     QWidget *centralWidget;
     QVTKWidget *qvtkWidget;
     QMenuBar *menuBar;
@@ -43,6 +44,8 @@ public:
         actionImport_file->setObjectName(QString::fromUtf8("actionImport_file"));
         actionPclShow = new QAction(PointCloudClass);
         actionPclShow->setObjectName(QString::fromUtf8("actionPclShow"));
+        actionSave_as = new QAction(PointCloudClass);
+        actionSave_as->setObjectName(QString::fromUtf8("actionSave_as"));
         centralWidget = new QWidget(PointCloudClass);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         qvtkWidget = new QVTKWidget(centralWidget);
@@ -65,10 +68,12 @@ public:
         menuBar->addAction(menuFile->menuAction());
         menuFile->addAction(actionImport_file);
         menuFile->addAction(actionPclShow);
+        menuFile->addAction(actionSave_as);
 
         retranslateUi(PointCloudClass);
         QObject::connect(actionImport_file, SIGNAL(triggered(bool)), PointCloudClass, SLOT(OnReadFile()));
         QObject::connect(actionPclShow, SIGNAL(triggered(bool)), PointCloudClass, SLOT(PCL()));
+        QObject::connect(actionSave_as, SIGNAL(triggered(bool)), PointCloudClass, SLOT(SaveAsPlY()));
 
         QMetaObject::connectSlotsByName(PointCloudClass);
     } // setupUi
@@ -78,6 +83,7 @@ public:
         PointCloudClass->setWindowTitle(QApplication::translate("PointCloudClass", "PointCloud", nullptr));
         actionImport_file->setText(QApplication::translate("PointCloudClass", "Import file", nullptr));
         actionPclShow->setText(QApplication::translate("PointCloudClass", "PclShow", nullptr));
+        actionSave_as->setText(QApplication::translate("PointCloudClass", "Save as", nullptr));
         menuFile->setTitle(QApplication::translate("PointCloudClass", "File", nullptr));
     } // retranslateUi
 

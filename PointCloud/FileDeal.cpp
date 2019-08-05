@@ -6,8 +6,6 @@
 
 
 using namespace std;
-vector<string> file;
-int point_count = 0;
 
 
 FileDeal::FileDeal()
