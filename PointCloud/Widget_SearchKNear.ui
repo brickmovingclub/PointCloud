@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Widget_SearchKNear</class>
+ <widget class="QWidget" name="Widget_SearchKNear">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>250</width>
+    <height>143</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>185</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QLabel" name="label_x">
+      <property name="text">
+       <string>X:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineEdit_X"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_Y">
+      <property name="text">
+       <string>Y:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineEdit_Y"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_Z">
+      <property name="text">
+       <string>Z:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineEdit_Z"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>100</y>
+     <width>250</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item>
+     <widget class="QPushButton" name="pushButton_voxelSearch">
+      <property name="text">
+       <string>体素搜索</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton_kNearNodes">
+      <property name="text">
+       <string>K领域节点搜索</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton_NearRadiusSearch">
+      <property name="text">
+       <string>半径搜索</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>21</x>
+     <y>61</y>
+     <width>195</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <item>
+     <widget class="QLabel" name="label_K">
+      <property name="text">
+       <string>K阶领域：</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineEdit"/>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>pushButton_voxelSearch</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>Widget_SearchKNear</receiver>
+   <slot>OnPushButton_voxelSearch()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>38</x>
+     <y>112</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>124</x>
+     <y>71</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_kNearNodes</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>Widget_SearchKNear</receiver>
+   <slot>OnPushButton_kNearNodes()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>124</x>
+     <y>112</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>124</x>
+     <y>71</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_NearRadiusSearch</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>Widget_SearchKNear</receiver>
+   <slot>OnPushButton_NearRadiusSearch()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>211</x>
+     <y>112</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>124</x>
+     <y>71</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>OnPushButton_voxelSearch()</slot>
+  <slot>OnPushButton_kNearNodes()</slot>
+  <slot>OnPushButton_NearRadiusSearch()</slot>
+ </slots>
+</ui>

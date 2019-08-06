@@ -15,7 +15,7 @@ PCLViewer::~PCLViewer()
 {
 }
 
-void PCLViewer::ReadPcdFile(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud, const fs::path &fileName)
+void PCLViewer::ReadPcdFile(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const fs::path &fileName)
 {
 	char *buffer = nullptr;				//	临时存储文件内容
 	int i = 0,pointSize = 0;
@@ -49,9 +49,9 @@ void PCLViewer::ReadPcdFile(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud, const
 		cloud->points[i].y = y;
 		cloud->points[i].z = z;
 
-		cloud->points[i].r = red;
-		cloud->points[i].g = green;
-		cloud->points[i].b = blue;
+		//cloud->points[i].r = red;
+	//	cloud->points[i].g = green;
+		//cloud->points[i].b = blue;
 
 		i++;
 

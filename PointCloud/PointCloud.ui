@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>400</height>
+    <width>981</width>
+    <height>799</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <widget class="QVTKWidget" name="qvtkWidget">
     <property name="geometry">
      <rect>
-      <x>-10</x>
-      <y>9</y>
-      <width>591</width>
-      <height>361</height>
+      <x>10</x>
+      <y>0</y>
+      <width>911</width>
+      <height>731</height>
      </rect>
     </property>
    </widget>
@@ -30,7 +30,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>600</width>
+     <width>981</width>
      <height>23</height>
     </rect>
    </property>
@@ -41,8 +41,34 @@
     <addaction name="actionImport_file"/>
     <addaction name="actionPclShow"/>
     <addaction name="actionSave_as"/>
+    <addaction name="actionoepnPcdFile"/>
+    <addaction name="actionqing_kong"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionSpace_div"/>
+   </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>KtTree</string>
+    </property>
+    <addaction name="actiontanlan"/>
+    <addaction name="actionbosong"/>
+   </widget>
+   <widget class="QMenu" name="menuOcTree">
+    <property name="title">
+     <string>OcTree</string>
+    </property>
+    <addaction name="actionSearchKNear"/>
+    <addaction name="actionSpaceDiv"/>
+    <addaction name="actionShowLeafNode"/>
    </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menu"/>
+   <addaction name="menuOcTree"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -66,6 +92,51 @@
   <action name="actionSave_as">
    <property name="text">
     <string>Save as</string>
+   </property>
+  </action>
+  <action name="actionSpace_div">
+   <property name="text">
+    <string>Space div</string>
+   </property>
+  </action>
+  <action name="actiontanlan">
+   <property name="text">
+    <string>贪婪三角算法</string>
+   </property>
+  </action>
+  <action name="actionbosong">
+   <property name="text">
+    <string>泊松算法</string>
+   </property>
+  </action>
+  <action name="actionyidong">
+   <property name="text">
+    <string>移动立体算法</string>
+   </property>
+  </action>
+  <action name="actionoepnPcdFile">
+   <property name="text">
+    <string>打开pcd文件</string>
+   </property>
+  </action>
+  <action name="actionqing_kong">
+   <property name="text">
+    <string>清空</string>
+   </property>
+  </action>
+  <action name="actionSearchKNear">
+   <property name="text">
+    <string>搜索k阶领域点</string>
+   </property>
+  </action>
+  <action name="actionSpaceDiv">
+   <property name="text">
+    <string>空间划分</string>
+   </property>
+  </action>
+  <action name="actionShowLeafNode">
+   <property name="text">
+    <string>显示叶子节点</string>
    </property>
   </action>
  </widget>
@@ -129,10 +200,95 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionbosong</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>PointCloudClass</receiver>
+   <slot>poisson_reconstruct()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actiontanlan</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>PointCloudClass</receiver>
+   <slot>greedyTriangulation_reconstruct()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionoepnPcdFile</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>PointCloudClass</receiver>
+   <slot>open_pcd_file()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSearchKNear</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>PointCloudClass</receiver>
+   <slot>OnSearchKNear()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>490</x>
+     <y>399</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionShowLeafNode</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>PointCloudClass</receiver>
+   <slot>ShowLeafNode()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>490</x>
+     <y>399</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnReadFile()</slot>
-  <slot>PCL()</slot>
   <slot>SaveAsPlY()</slot>
+  <slot>poisson_reconstruct()</slot>
+  <slot>greedyTriangulation_reconstruct()</slot>
+  <slot>open_pcd_file()</slot>
+  <slot>OnClear()</slot>
+  <slot>OnSearchKNear()</slot>
+  <slot>ShowLeafNode()</slot>
  </slots>
 </ui>

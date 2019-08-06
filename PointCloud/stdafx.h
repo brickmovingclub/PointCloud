@@ -6,6 +6,14 @@
 #include <pcl/point_types.h> //PCL对各种格式的点的支持头文件
 #include <pcl/visualization/cloud_viewer.h>//点云查看窗口头文件
 
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/surface/gp3.h>
+#include <pcl/visualization/pcl_visualizer.h>
+//#include <boost/thread/thread.hpp>
+#include <pcl/surface/poisson.h>
+#include <pcl/surface/marching_cubes_hoppe.h>
+#include <pcl/surface/marching_cubes_rbf.h>
 
 // Visualization Toolkit (VTK)
 #include <vtkRenderWindow.h>

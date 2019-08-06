@@ -28,10 +28,22 @@ public:
     QAction *actionImport_file;
     QAction *actionPclShow;
     QAction *actionSave_as;
+    QAction *actionSpace_div;
+    QAction *actiontanlan;
+    QAction *actionbosong;
+    QAction *actionyidong;
+    QAction *actionoepnPcdFile;
+    QAction *actionqing_kong;
+    QAction *actionSearchKNear;
+    QAction *actionSpaceDiv;
+    QAction *actionShowLeafNode;
     QWidget *centralWidget;
     QVTKWidget *qvtkWidget;
     QMenuBar *menuBar;
     QMenu *menuFile;
+    QMenu *menuEdit;
+    QMenu *menu;
+    QMenu *menuOcTree;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
 
@@ -39,24 +51,48 @@ public:
     {
         if (PointCloudClass->objectName().isEmpty())
             PointCloudClass->setObjectName(QString::fromUtf8("PointCloudClass"));
-        PointCloudClass->resize(600, 400);
+        PointCloudClass->resize(981, 799);
         actionImport_file = new QAction(PointCloudClass);
         actionImport_file->setObjectName(QString::fromUtf8("actionImport_file"));
         actionPclShow = new QAction(PointCloudClass);
         actionPclShow->setObjectName(QString::fromUtf8("actionPclShow"));
         actionSave_as = new QAction(PointCloudClass);
         actionSave_as->setObjectName(QString::fromUtf8("actionSave_as"));
+        actionSpace_div = new QAction(PointCloudClass);
+        actionSpace_div->setObjectName(QString::fromUtf8("actionSpace_div"));
+        actiontanlan = new QAction(PointCloudClass);
+        actiontanlan->setObjectName(QString::fromUtf8("actiontanlan"));
+        actionbosong = new QAction(PointCloudClass);
+        actionbosong->setObjectName(QString::fromUtf8("actionbosong"));
+        actionyidong = new QAction(PointCloudClass);
+        actionyidong->setObjectName(QString::fromUtf8("actionyidong"));
+        actionoepnPcdFile = new QAction(PointCloudClass);
+        actionoepnPcdFile->setObjectName(QString::fromUtf8("actionoepnPcdFile"));
+        actionqing_kong = new QAction(PointCloudClass);
+        actionqing_kong->setObjectName(QString::fromUtf8("actionqing_kong"));
+        actionSearchKNear = new QAction(PointCloudClass);
+        actionSearchKNear->setObjectName(QString::fromUtf8("actionSearchKNear"));
+        actionSpaceDiv = new QAction(PointCloudClass);
+        actionSpaceDiv->setObjectName(QString::fromUtf8("actionSpaceDiv"));
+        actionShowLeafNode = new QAction(PointCloudClass);
+        actionShowLeafNode->setObjectName(QString::fromUtf8("actionShowLeafNode"));
         centralWidget = new QWidget(PointCloudClass);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         qvtkWidget = new QVTKWidget(centralWidget);
         qvtkWidget->setObjectName(QString::fromUtf8("qvtkWidget"));
-        qvtkWidget->setGeometry(QRect(-10, 9, 591, 361));
+        qvtkWidget->setGeometry(QRect(10, 0, 911, 731));
         PointCloudClass->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(PointCloudClass);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 600, 23));
+        menuBar->setGeometry(QRect(0, 0, 981, 23));
         menuFile = new QMenu(menuBar);
         menuFile->setObjectName(QString::fromUtf8("menuFile"));
+        menuEdit = new QMenu(menuBar);
+        menuEdit->setObjectName(QString::fromUtf8("menuEdit"));
+        menu = new QMenu(menuBar);
+        menu->setObjectName(QString::fromUtf8("menu"));
+        menuOcTree = new QMenu(menuBar);
+        menuOcTree->setObjectName(QString::fromUtf8("menuOcTree"));
         PointCloudClass->setMenuBar(menuBar);
         mainToolBar = new QToolBar(PointCloudClass);
         mainToolBar->setObjectName(QString::fromUtf8("mainToolBar"));
@@ -66,14 +102,30 @@ public:
         PointCloudClass->setStatusBar(statusBar);
 
         menuBar->addAction(menuFile->menuAction());
+        menuBar->addAction(menuEdit->menuAction());
+        menuBar->addAction(menu->menuAction());
+        menuBar->addAction(menuOcTree->menuAction());
         menuFile->addAction(actionImport_file);
         menuFile->addAction(actionPclShow);
         menuFile->addAction(actionSave_as);
+        menuFile->addAction(actionoepnPcdFile);
+        menuFile->addAction(actionqing_kong);
+        menuEdit->addAction(actionSpace_div);
+        menu->addAction(actiontanlan);
+        menu->addAction(actionbosong);
+        menuOcTree->addAction(actionSearchKNear);
+        menuOcTree->addAction(actionSpaceDiv);
+        menuOcTree->addAction(actionShowLeafNode);
 
         retranslateUi(PointCloudClass);
         QObject::connect(actionImport_file, SIGNAL(triggered(bool)), PointCloudClass, SLOT(OnReadFile()));
         QObject::connect(actionPclShow, SIGNAL(triggered(bool)), PointCloudClass, SLOT(PCL()));
         QObject::connect(actionSave_as, SIGNAL(triggered(bool)), PointCloudClass, SLOT(SaveAsPlY()));
+        QObject::connect(actionbosong, SIGNAL(triggered(bool)), PointCloudClass, SLOT(poisson_reconstruct()));
+        QObject::connect(actiontanlan, SIGNAL(triggered(bool)), PointCloudClass, SLOT(greedyTriangulation_reconstruct()));
+        QObject::connect(actionoepnPcdFile, SIGNAL(triggered(bool)), PointCloudClass, SLOT(open_pcd_file()));
+        QObject::connect(actionSearchKNear, SIGNAL(triggered(bool)), PointCloudClass, SLOT(OnSearchKNear()));
+        QObject::connect(actionShowLeafNode, SIGNAL(triggered(bool)), PointCloudClass, SLOT(ShowLeafNode()));
 
         QMetaObject::connectSlotsByName(PointCloudClass);
     } // setupUi
@@ -84,7 +136,19 @@ public:
         actionImport_file->setText(QApplication::translate("PointCloudClass", "Import file", nullptr));
         actionPclShow->setText(QApplication::translate("PointCloudClass", "PclShow", nullptr));
         actionSave_as->setText(QApplication::translate("PointCloudClass", "Save as", nullptr));
+        actionSpace_div->setText(QApplication::translate("PointCloudClass", "Space div", nullptr));
+        actiontanlan->setText(QApplication::translate("PointCloudClass", "\350\264\252\345\251\252\344\270\211\350\247\222\347\256\227\346\263\225", nullptr));
+        actionbosong->setText(QApplication::translate("PointCloudClass", "\346\263\212\346\235\276\347\256\227\346\263\225", nullptr));
+        actionyidong->setText(QApplication::translate("PointCloudClass", "\347\247\273\345\212\250\347\253\213\344\275\223\347\256\227\346\263\225", nullptr));
+        actionoepnPcdFile->setText(QApplication::translate("PointCloudClass", "\346\211\223\345\274\200pcd\346\226\207\344\273\266", nullptr));
+        actionqing_kong->setText(QApplication::translate("PointCloudClass", "\346\270\205\347\251\272", nullptr));
+        actionSearchKNear->setText(QApplication::translate("PointCloudClass", "\346\220\234\347\264\242k\351\230\266\351\242\206\345\237\237\347\202\271", nullptr));
+        actionSpaceDiv->setText(QApplication::translate("PointCloudClass", "\347\251\272\351\227\264\345\210\222\345\210\206", nullptr));
+        actionShowLeafNode->setText(QApplication::translate("PointCloudClass", "\346\230\276\347\244\272\345\217\266\345\255\220\350\212\202\347\202\271", nullptr));
         menuFile->setTitle(QApplication::translate("PointCloudClass", "File", nullptr));
+        menuEdit->setTitle(QApplication::translate("PointCloudClass", "Edit", nullptr));
+        menu->setTitle(QApplication::translate("PointCloudClass", "KtTree", nullptr));
+        menuOcTree->setTitle(QApplication::translate("PointCloudClass", "OcTree", nullptr));
     } // retranslateUi
 
 };
