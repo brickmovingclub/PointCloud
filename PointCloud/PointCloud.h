@@ -24,8 +24,8 @@ private slots:
 
 	//	
 	void OnReadFile();										//	读pcd文件槽函数
-	void  open_pcd_file();
-	void	OnClear();
+	void open_pcd_file();
+	void OnClear();
 	void SaveAsPlY();										//		保存为ply格式
 	void OnActionSearchKNear();
 
