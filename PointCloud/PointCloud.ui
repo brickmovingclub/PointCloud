@@ -48,7 +48,7 @@
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionSpace_div"/>
+    <addaction name="action_drawBox"/>
    </widget>
    <widget class="QMenu" name="menu">
     <property name="title">
@@ -94,9 +94,9 @@
     <string>Save as</string>
    </property>
   </action>
-  <action name="actionSpace_div">
+  <action name="action_drawBox">
    <property name="text">
-    <string>Space div</string>
+    <string>Draw Box</string>
    </property>
   </action>
   <action name="actiontanlan">
@@ -280,6 +280,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>action_drawBox</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>PointCloudClass</receiver>
+   <slot>DeawBoundingBox()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>490</x>
+     <y>399</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnReadFile()</slot>
@@ -290,5 +306,6 @@
   <slot>OnClear()</slot>
   <slot>OnSearchKNear()</slot>
   <slot>ShowLeafNode()</slot>
+  <slot>DeawBoundingBox()</slot>
  </slots>
 </ui>

@@ -14,6 +14,9 @@
 #include <pcl/surface/poisson.h>
 #include <pcl/surface/marching_cubes_hoppe.h>
 #include <pcl/surface/marching_cubes_rbf.h>
+#include <Eigen/Core>
+#include <pcl/common/transforms.h>
+#include <pcl/common/common.h>
 
 // Visualization Toolkit (VTK)
 #include <vtkRenderWindow.h>

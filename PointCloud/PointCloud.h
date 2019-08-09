@@ -20,6 +20,7 @@ private:
 	pcl::visualization::PCLVisualizer::Ptr _viewer;
 	pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud;
 	PCLViewer _pclViewer;
+private:
 private slots:
 
 	//	
@@ -28,6 +29,8 @@ private slots:
 	void	OnClear();
 	void SaveAsPlY();										//		保存为ply格式
 	void OnActionSearchKNear();
+	void DeawBoundingBox();									//	给模型画包围盒
+
 
 	/**********KT树实现点云数据的空间划分*************/
 		

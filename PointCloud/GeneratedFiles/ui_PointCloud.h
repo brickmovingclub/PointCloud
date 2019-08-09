@@ -28,7 +28,7 @@ public:
     QAction *actionImport_file;
     QAction *actionPclShow;
     QAction *actionSave_as;
-    QAction *actionSpace_div;
+    QAction *action_drawBox;
     QAction *actiontanlan;
     QAction *actionbosong;
     QAction *actionyidong;
@@ -58,8 +58,8 @@ public:
         actionPclShow->setObjectName(QString::fromUtf8("actionPclShow"));
         actionSave_as = new QAction(PointCloudClass);
         actionSave_as->setObjectName(QString::fromUtf8("actionSave_as"));
-        actionSpace_div = new QAction(PointCloudClass);
-        actionSpace_div->setObjectName(QString::fromUtf8("actionSpace_div"));
+        action_drawBox = new QAction(PointCloudClass);
+        action_drawBox->setObjectName(QString::fromUtf8("action_drawBox"));
         actiontanlan = new QAction(PointCloudClass);
         actiontanlan->setObjectName(QString::fromUtf8("actiontanlan"));
         actionbosong = new QAction(PointCloudClass);
@@ -110,7 +110,7 @@ public:
         menuFile->addAction(actionSave_as);
         menuFile->addAction(actionoepnPcdFile);
         menuFile->addAction(actionqing_kong);
-        menuEdit->addAction(actionSpace_div);
+        menuEdit->addAction(action_drawBox);
         menu->addAction(actiontanlan);
         menu->addAction(actionbosong);
         menuOcTree->addAction(actionSearchKNear);
@@ -126,6 +126,7 @@ public:
         QObject::connect(actionoepnPcdFile, SIGNAL(triggered(bool)), PointCloudClass, SLOT(open_pcd_file()));
         QObject::connect(actionSearchKNear, SIGNAL(triggered(bool)), PointCloudClass, SLOT(OnSearchKNear()));
         QObject::connect(actionShowLeafNode, SIGNAL(triggered(bool)), PointCloudClass, SLOT(ShowLeafNode()));
+        QObject::connect(action_drawBox, SIGNAL(triggered(bool)), PointCloudClass, SLOT(DeawBoundingBox()));
 
         QMetaObject::connectSlotsByName(PointCloudClass);
     } // setupUi
@@ -136,7 +137,7 @@ public:
         actionImport_file->setText(QApplication::translate("PointCloudClass", "Import file", nullptr));
         actionPclShow->setText(QApplication::translate("PointCloudClass", "PclShow", nullptr));
         actionSave_as->setText(QApplication::translate("PointCloudClass", "Save as", nullptr));
-        actionSpace_div->setText(QApplication::translate("PointCloudClass", "Space div", nullptr));
+        action_drawBox->setText(QApplication::translate("PointCloudClass", "Draw Box", nullptr));
         actiontanlan->setText(QApplication::translate("PointCloudClass", "\350\264\252\345\251\252\344\270\211\350\247\222\347\256\227\346\263\225", nullptr));
         actionbosong->setText(QApplication::translate("PointCloudClass", "\346\263\212\346\235\276\347\256\227\346\263\225", nullptr));
         actionyidong->setText(QApplication::translate("PointCloudClass", "\347\247\273\345\212\250\347\253\213\344\275\223\347\256\227\346\263\225", nullptr));

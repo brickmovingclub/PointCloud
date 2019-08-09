@@ -134,5 +134,7 @@ void KNearWidget::OnPushButton_NearRadiusSearch()
 				<< " (squared distance: " << pointRadiusSquaredDistance[i] << ")" << std::endl;
 		}
 
+		int pointsize = pointIdxRadiusSearch.size();
+		ui.lineEdit_result->setText(QString(QString::number(pointsize)));
 	}
 }
