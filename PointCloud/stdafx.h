@@ -49,3 +49,13 @@
 
 namespace fs = std::experimental::filesystem;
 using namespace std;
+
+
+//	空间点结构体
+struct Point
+{
+	float x;
+	float y;
+	float z;
+};
+std::list<std::pair<Point, Point>> activeList;			//	活动边表
