@@ -39,7 +39,12 @@
 
 // Visualization Toolkit (VTK)
 #include <vtkRenderWindow.h>
+#include <vtkMath.h>
+#include <vtkPlane.h>
+#include <vtkSmartPointer.h>
 
+
+#include <limits>
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -57,5 +62,12 @@ struct Point
 	float x;
 	float y;
 	float z;
+	Point()
+	{
+		x = 0.0f;
+		y = 0.0f;
+		z = 0.0f;
+	}
 };
+
 std::list<std::pair<Point, Point>> activeList;			//	»î¶¯±ß±í

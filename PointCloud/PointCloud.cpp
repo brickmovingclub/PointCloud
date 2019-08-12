@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "CVector.h"
 
 #include "FileDeal.h"
 #include "KNearWidget.h"
