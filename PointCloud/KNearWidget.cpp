@@ -33,7 +33,7 @@ void KNearWidget::OnPushButton_voxelSearch()
 		searchPoint.y = ui.lineEdit_Y->text().toFloat();
 		searchPoint.z = ui.lineEdit_Z->text().toFloat();
 
-		float resolution = 128.0f;
+		float resolution = 5.0f;
 
 		pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree(resolution);
 
@@ -68,7 +68,7 @@ void KNearWidget::OnPushButton_kNearNodes()
 		searchPoint.y = ui.lineEdit_Y->text().toFloat();
 		searchPoint.z = ui.lineEdit_Z->text().toFloat();
 
-		float resolution = 128.0f;
+		float resolution = 5.0f;
 
 		pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree(resolution);
 
@@ -107,7 +107,7 @@ void KNearWidget::OnPushButton_NearRadiusSearch()
 		searchPoint.y = ui.lineEdit_Y->text().toFloat();
 		searchPoint.z = ui.lineEdit_Z->text().toFloat();
 
-		float resolution = 128.0f;
+		float resolution = 5.0f;
 
 		pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree(resolution);
 

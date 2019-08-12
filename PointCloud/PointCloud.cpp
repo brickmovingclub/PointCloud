@@ -10,9 +10,6 @@ PointCloud::PointCloud(QWidget *parent)
 	: QMainWindow(parent),_cloud(NULL),_viewer(NULL)
 {
 	ui.setupUi(this);
-
-
-
 	this->setWindowTitle("PCL viewer");
 
 	// Setup the cloud pointer
@@ -28,6 +25,7 @@ PointCloud::PointCloud(QWidget *parent)
 }
 
 
+//读文件--asc/pcd
 void PointCloud::OnReadFile()
 {
 	//_cloud->clear();
@@ -62,6 +60,8 @@ void PointCloud::OnReadFile()
 	//ui.qvtkWidget->update();
 }
 
+
+//另存为PLY文件
 void PointCloud::SaveAsPlY()
 {
 	fs::path tempFileName = "";
@@ -73,9 +73,9 @@ void PointCloud::SaveAsPlY()
 }
 
 
+//贪婪三角形重建
 void PointCloud::greedyTriangulation_reconstruct()
 {
-
 	//cloud_with_noramls=cloud+normals
 	pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals = getPointNormal();
 
@@ -116,10 +116,11 @@ void PointCloud::greedyTriangulation_reconstruct()
 	std::cout << "三角面片划分完成" << std::endl;
 
 }
+
+
+//泊松三角形重建
 void PointCloud::poisson_reconstruct()
 {
-
-
 	//cloud_with_noramls=cloud+normals
 	pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals = getPointNormal();
 
@@ -164,6 +165,8 @@ pcl::PointCloud<pcl::PointNormal>::Ptr PointCloud::getPointNormal()
 	return cloud_with_normals;
 }
 
+
+//打开pcd文件
 void  PointCloud::open_pcd_file()
 {
 	QString filter;
@@ -193,6 +196,7 @@ void  PointCloud::open_pcd_file()
 	ui.qvtkWidget->update();
 }
 
+
 void	PointCloud::OnClear()
 {
 	_cloud->clear();
@@ -202,6 +206,7 @@ void	PointCloud::OnClear()
 
 }
 
+
 void PointCloud::OnActionSearchKNear()
 {
 	KNearWidget *widget = new KNearWidget();
@@ -209,38 +214,95 @@ void PointCloud::OnActionSearchKNear()
 	//connect(widget, SIGNAL(SignalSearchKNear(float x, float y, float z, int &k)), this, SLOT(SearchKNear(int &k)));
 }
 
+
 void PointCloud::SearchKNear(float x, float y, float z, int &k)
 {
 	// Neighbors within voxel search
 	KNearWidget *widget = new KNearWidget();
-
-	widget->show();
-	
+	widget->show();	
 }
 
 
 //找到八叉树中的叶子节点并显示
-//画包围盒
 void PointCloud::ShowLeafNode()
+{
+	pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> tree(Resolution);
+	tree.setInputCloud(_cloud);
+	tree.addPointsFromInputCloud();
+
+	int depth = tree.getTreeDepth();
+	for (auto it = tree.begin(depth); it != tree.end(); it++)
+	{
+		if (it.isLeafNode())
+		{
+			Eigen::Vector3f min_pt, max_pt;
+			tree.getVoxelBounds(it, min_pt, max_pt);
+			std::cout << "极小值：" << min_pt.x() << "\t" << min_pt.y() << "\t" << min_pt.z() << std::endl;
+			std::cout << "极大值：" << max_pt.x() << "\t" << max_pt.y() << "\t" << max_pt.z() << std::endl;
+			std::cout << std::endl;
+		}
+	}
+
+
+	/*pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> tree(Resolution);
+	tree.setInputCloud(_cloud);         
+	tree.addPointsFromInputCloud();  
+
+	int depth = tree.getTreeDepth();
+	std::vector<Eigen::Vector3f> min, max;
+	for (auto it = tree.begin(depth); it != tree.end(); it++)
+	{
+		if (it.isLeafNode())
+		{
+			Eigen::Vector3f min_pt, max_pt;
+			tree.getVoxelBounds(it, min_pt, max_pt);
+			min.push_back(min_pt);
+			max.push_back(max_pt);
+		}	
+	}
+
+	float r = 0.0f, g = 0.0f, b = 1.0f;
+	int viewport = 0;
+	pcl::visualization::PCLVisualizer viewer;
+	string name;
+	for (auto it = min.begin(),its = max.begin(); it != min.end(); it++)
+	{
+		r = it->x();
+		g = it->y();
+		b = it->z();
+		name = viewport + "";
+		viewer.addCube(it->x(), its->x(), it->y(), its->y(), it->z(), its->z(), r, g, b, name, viewport);
+		viewport++;
+	}
+	viewer.setBackgroundColor(0.0, 0.0, 0.0);
+	while (!viewer.wasStopped())
+	{
+		viewer.spinOnce();
+	}*/
+}
+
+
+//为整个模型画包围盒
+void PointCloud::DeawBoundingBox()
 {
 	//获取点云质心
 	Eigen::Vector4f pcaCentroid;
-	pcl::compute3DCentroid(*_cloud, pcaCentroid); 
+	pcl::compute3DCentroid(*_cloud, pcaCentroid);
 	//计算协方差，获取协方差矩阵
 	Eigen::Matrix3f covariance;
-	pcl::computeCovarianceMatrixNormalized(*_cloud, pcaCentroid, covariance); 
+	pcl::computeCovarianceMatrixNormalized(*_cloud, pcaCentroid, covariance);
 	//计算特征向量、特征值
 	Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigen_solver(covariance, Eigen::ComputeEigenvectors);
 	Eigen::Matrix3f eigenVectorsPCA = eigen_solver.eigenvectors();
 	Eigen::Vector3f eigenValuesPCA = eigen_solver.eigenvalues();
 	//校正主方向间垂直，特征向量即为主方向
-	eigenVectorsPCA.col(2) = eigenVectorsPCA.col(0).cross(eigenVectorsPCA.col(1)); 
+	eigenVectorsPCA.col(2) = eigenVectorsPCA.col(0).cross(eigenVectorsPCA.col(1));
 	eigenVectorsPCA.col(0) = eigenVectorsPCA.col(1).cross(eigenVectorsPCA.col(2));
 	eigenVectorsPCA.col(1) = eigenVectorsPCA.col(2).cross(eigenVectorsPCA.col(0));
 
 	Eigen::Matrix4f tm = Eigen::Matrix4f::Identity(); //变换矩阵
 	Eigen::Matrix4f tm_inv = Eigen::Matrix4f::Identity(); //变换逆矩阵
-	tm.block<3, 3>(0, 0) = eigenVectorsPCA.transpose();   
+	tm.block<3, 3>(0, 0) = eigenVectorsPCA.transpose();
 	tm.block<3, 1>(0, 3) = -1.0f * (eigenVectorsPCA.transpose()) *(pcaCentroid.head<3>());
 	tm_inv = tm.inverse();
 
@@ -307,259 +369,5 @@ void PointCloud::ShowLeafNode()
 	}
 }
 
-void PointCloud::DeawBoundingBox()
-{
-	pcl::PointCloud<pcl::PointXYZ >::Ptr _cloud(new pcl::PointCloud<pcl::PointXYZ >());
-	pcl::visualization::PCLVisualizer::Ptr _viewer(new pcl::visualization::PCLVisualizer("viewer", false));
 
-	pcl::io::loadPCDFile("D://资料//苏州//taks2//bunny.pcd", *_cloud);
 
-	if (_cloud == NULL && _viewer == NULL)
-		return;
-	Eigen::Vector4f pcaCentroid;
-
-	pcl::compute3DCentroid(*_cloud, pcaCentroid);
-
-	Eigen::Matrix3f covariance;
-
-	pcl::computeCovarianceMatrixNormalized(*_cloud, pcaCentroid, covariance);
-
-	Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigen_solver(covariance, Eigen::ComputeEigenvectors);
-
-	Eigen::Matrix3f eigenVectorsPCA = eigen_solver.eigenvectors();
-
-	Eigen::Vector3f eigenValuesPCA = eigen_solver.eigenvalues();
-
-	eigenVectorsPCA.col(2) = eigenVectorsPCA.col(0).cross(eigenVectorsPCA.col(1)); //校正主方向间垂直
-
-	eigenVectorsPCA.col(0) = eigenVectorsPCA.col(1).cross(eigenVectorsPCA.col(2));
-
-	eigenVectorsPCA.col(1) = eigenVectorsPCA.col(2).cross(eigenVectorsPCA.col(0));
-
-
-	std::cout << "特征值va(3x1):\n" << eigenValuesPCA << std::endl;
-
-	std::cout << "特征向量ve(3x3):\n" << eigenVectorsPCA << std::endl;
-
-	std::cout << "质心点(4x1):\n" << pcaCentroid << std::endl;
-
-	/*
-
-	// 另一种计算点云协方差矩阵特征值和特征向量的方式:通过pcl中的pca接口，如下，这种情况得到的特征向量相似特征向量
-
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudPCAprojection (new pcl::PointCloud<pcl::PointXYZ>);
-
-	pcl::PCA<pcl::PointXYZ> pca;
-
-	pca.setInputCloud(cloudSegmented);
-
-	pca.project(*cloudSegmented, *cloudPCAprojection);
-
-	std::cerr << std::endl << "EigenVectors: " << pca.getEigenVectors() << std::endl;//计算特征向量
-
-	std::cerr << std::endl << "EigenValues: " << pca.getEigenValues() << std::endl;//计算特征值
-
-	*/
-
-	Eigen::Matrix4f tm = Eigen::Matrix4f::Identity();
-
-	Eigen::Matrix4f tm_inv = Eigen::Matrix4f::Identity();
-
-	tm.block<3, 3>(0, 0) = eigenVectorsPCA.transpose(); //R.
-
-	tm.block<3, 1>(0, 3) = -1.0f * (eigenVectorsPCA.transpose()) *(pcaCentroid.head<3>());// -R*t
-
-	tm_inv = tm.inverse();
-
-
-	std::cout << "变换矩阵tm(4x4):\n" << tm << std::endl;
-
-	std::cout << "逆变矩阵tm'(4x4):\n" << tm_inv << std::endl;
-
-
-	pcl::PointCloud<pcl::PointXYZ>::Ptr transformedCloud(new pcl::PointCloud<pcl::PointXYZ>);
-
-	pcl::transformPointCloud(*_cloud, *transformedCloud, tm);
-
-
-	pcl::PointXYZ min_p1, max_p1;
-
-	Eigen::Vector3f c1, c;
-
-	pcl::getMinMax3D(*transformedCloud, min_p1, max_p1);
-
-	c1 = 0.5f*(min_p1.getVector3fMap() + max_p1.getVector3fMap());
-
-
-	std::cout << "型心c1(3x1):\n" << c1 << std::endl;
-
-
-	Eigen::Affine3f tm_inv_aff(tm_inv);
-
-	pcl::transformPoint(c1, c, tm_inv_aff);
-
-
-	Eigen::Vector3f whd, whd1;
-
-	whd1 = max_p1.getVector3fMap() - min_p1.getVector3fMap();
-
-	whd = whd1;
-
-	float sc1 = (whd1(0) + whd1(1) + whd1(2)) / 3; //点云平均尺度，用于设置主方向箭头大小
-
-
-	//std::cout << "width1=" << whd1(0) << endl;
-
-	//std::cout << "heght1=" << whd1(1) << endl;
-
-	//std::cout << "depth1=" << whd1(2) << endl;
-
-	//std::cout << "scale1=" << sc1 << endl;
-
-
-	const Eigen::Quaternionf bboxQ1(Eigen::Quaternionf::Identity());
-
-	const Eigen::Vector3f bboxT1(c1);
-
-
-	const Eigen::Quaternionf bboxQ(tm_inv.block<3, 3>(0, 0));
-
-	const Eigen::Vector3f bboxT(c);
-
-
-
-	//变换到原点的点云主方向
-
-	pcl::PointXYZ op;
-
-	op.x = 0.0;
-
-	op.y = 0.0;
-
-	op.z = 0.0;
-
-	Eigen::Vector3f px, py, pz;
-
-	Eigen::Affine3f tm_aff(tm);
-
-	pcl::transformVector(eigenVectorsPCA.col(0), px, tm_aff);
-
-	pcl::transformVector(eigenVectorsPCA.col(1), py, tm_aff);
-
-	pcl::transformVector(eigenVectorsPCA.col(2), pz, tm_aff);
-
-	pcl::PointXYZ pcaX;
-
-	pcaX.x = sc1 * px(0);
-
-	pcaX.y = sc1 * px(1);
-
-	pcaX.z = sc1 * px(2);
-
-	pcl::PointXYZ pcaY;
-
-	pcaY.x = sc1 * py(0);
-
-	pcaY.y = sc1 * py(1);
-
-	pcaY.z = sc1 * py(2);
-
-	pcl::PointXYZ pcaZ;
-
-	pcaZ.x = sc1 * pz(0);
-
-	pcaZ.y = sc1 * pz(1);
-
-	pcaZ.z = sc1 * pz(2);
-
-
-
-	//初始点云的主方向
-
-	pcl::PointXYZ cp;
-
-	cp.x = pcaCentroid(0);
-
-	cp.y = pcaCentroid(1);
-
-	cp.z = pcaCentroid(2);
-
-	pcl::PointXYZ pcX;
-
-	pcX.x = sc1 * eigenVectorsPCA(0, 0) + cp.x;
-
-	pcX.y = sc1 * eigenVectorsPCA(1, 0) + cp.y;
-
-	pcX.z = sc1 * eigenVectorsPCA(2, 0) + cp.z;
-
-	pcl::PointXYZ pcY;
-
-	pcY.x = sc1 * eigenVectorsPCA(0, 1) + cp.x;
-
-	pcY.y = sc1 * eigenVectorsPCA(1, 1) + cp.y;
-
-	pcY.z = sc1 * eigenVectorsPCA(2, 1) + cp.z;
-
-	pcl::PointXYZ pcZ;
-
-	pcZ.x = sc1 * eigenVectorsPCA(0, 2) + cp.x;
-
-	pcZ.y = sc1 * eigenVectorsPCA(1, 2) + cp.y;
-
-	pcZ.z = sc1 * eigenVectorsPCA(2, 2) + cp.z;
-
-
-
-	//visualization
-
-	//pcl::visualization::PCLVisualizer viewer;
-
-
-	pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> tc_handler(transformedCloud, 0, 255, 0); //转换到原点的点云相关
-
-	_viewer->addPointCloud(transformedCloud, tc_handler, "transformCloud");
-
-	_viewer->addCube(bboxT1, bboxQ1, whd1(0), whd1(1), whd1(2), "bbox1");
-
-	_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION, pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME, "bbox1");
-
-	_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0.0, 1.0, 0.0, "bbox1");
-
-
-	_viewer->addArrow(pcaX, op, 1.0, 0.0, 0.0, false, "arrow_X");
-
-	_viewer->addArrow(pcaY, op, 0.0, 1.0, 0.0, false, "arrow_Y");
-
-	_viewer->addArrow(pcaZ, op, 0.0, 0.0, 1.0, false, "arrow_Z");
-
-
-	pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> color_handler(_cloud, 255, 0, 0); //输入的初始点云相关
-
-	_viewer->addPointCloud(_cloud, color_handler, "cloud");
-
-	_viewer->addCube(bboxT, bboxQ, whd(0), whd(1), whd(2), "bbox");
-
-	_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION, pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME, "bbox");
-
-	_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0, 0.0, 0.0, "bbox");
-
-
-	_viewer->addArrow(pcX, cp, 1.0, 0.0, 0.0, false, "arrow_x");
-
-	_viewer->addArrow(pcY, cp, 0.0, 1.0, 0.0, false, "arrow_y");
-
-	_viewer->addArrow(pcZ, cp, 0.0, 0.0, 1.0, false, "arrow_z");
-
-
-	_viewer->addCoordinateSystem(0.5f*sc1);
-
-	_viewer->setBackgroundColor(1.0, 1.0, 1.0);
-
-	while (!_viewer->wasStopped())
-
-	{
-
-		_viewer->spinOnce(100);
-
-	}
-}
