@@ -378,6 +378,8 @@ void PointCloud::Triangulation()
 	std::list<CLine> activeList;			//	活动边表
 	std::list< CFace> ST;					//	三角网格
 
+	//	求种子三角形
+
 }
 
 
