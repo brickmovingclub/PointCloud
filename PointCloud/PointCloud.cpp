@@ -226,28 +226,11 @@ void PointCloud::SearchKNear(float x, float y, float z, int &k)
 //找到八叉树中的叶子节点并显示
 void PointCloud::ShowLeafNode()
 {
-	pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> tree(Resolution);
+	float resolu = 0.01f;
+	pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> tree(resolu);
 	tree.setInputCloud(_cloud);
 	tree.addPointsFromInputCloud();
-
-	int depth = tree.getTreeDepth();
-	for (auto it = tree.begin(depth); it != tree.end(); it++)
-	{
-		if (it.isLeafNode())
-		{
-			Eigen::Vector3f min_pt, max_pt;
-			tree.getVoxelBounds(it, min_pt, max_pt);
-			std::cout << "极小值：" << min_pt.x() << "\t" << min_pt.y() << "\t" << min_pt.z() << std::endl;
-			std::cout << "极大值：" << max_pt.x() << "\t" << max_pt.y() << "\t" << max_pt.z() << std::endl;
-			std::cout << std::endl;
-		}
-	}
-
-
-	/*pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> tree(Resolution);
-	tree.setInputCloud(_cloud);         
-	tree.addPointsFromInputCloud();  
-
+	std::cout << "叶子节点个数：" << tree.getLeafCount() << std::endl;
 	int depth = tree.getTreeDepth();
 	std::vector<Eigen::Vector3f> min, max;
 	for (auto it = tree.begin(depth); it != tree.end(); it++)
@@ -258,27 +241,25 @@ void PointCloud::ShowLeafNode()
 			tree.getVoxelBounds(it, min_pt, max_pt);
 			min.push_back(min_pt);
 			max.push_back(max_pt);
-		}	
+		}
 	}
 
 	float r = 0.0f, g = 0.0f, b = 1.0f;
-	int viewport = 0;
 	pcl::visualization::PCLVisualizer viewer;
-	string name;
-	for (auto it = min.begin(),its = max.begin(); it != min.end(); it++)
+	int id = 0;
+	for (auto it = min.begin(), its = max.begin(); it != min.end(); it++, its++)
 	{
-		r = it->x();
-		g = it->y();
-		b = it->z();
-		name = viewport + "";
-		viewer.addCube(it->x(), its->x(), it->y(), its->y(), it->z(), its->z(), r, g, b, name, viewport);
-		viewport++;
+		std::cout << "极小值：" << it->x() << "\t" << it->y() << "\t" << it->z() << std::endl;
+		std::cout << "极大值：" << its->x() << "\t" << its->y() << "\t" << its->z() << std::endl;
+		std::cout << std::endl;
+		viewer.addCube(it->x(), its->x(), it->y(), its->y(), it->z(), its->z(), r, g, b, std::to_string(id));
+		id++;
 	}
 	viewer.setBackgroundColor(0.0, 0.0, 0.0);
 	while (!viewer.wasStopped())
 	{
 		viewer.spinOnce();
-	}*/
+	}
 }
 
 
