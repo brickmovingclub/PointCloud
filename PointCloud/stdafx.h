@@ -59,15 +59,30 @@ using namespace std;
 //	空间点结构体
 struct Point
 {
-	float x;
-	float y;
-	float z;
+	float _x;
+	float _y;
+	float _z;
 	Point()
 	{
-		x = 0.0f;
-		y = 0.0f;
-		z = 0.0f;
+		this->_x = 0.0f;
+		this->_y = 0.0f;
+		this->_z = 0.0f;
 	}
+	Point(float x,float y,float z)
+	{
+		_x = x;
+		_y = y;
+		_z = z;
+	}
+	Point(const Point &point)
+	{
+		this->_x = point._x;
+		this->_y = point._y;
+		this->_z = point._z;
+	}
+	~Point()
+	{
+	}
+
 };
 
-std::list<std::pair<Point, Point>> activeList;			//	活动边表

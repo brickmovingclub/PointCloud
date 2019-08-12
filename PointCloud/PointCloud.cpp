@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "CVector.h"
 
+#include "CLine.h"
+#include "CFace.h"
+
 #include "FileDeal.h"
 #include "KNearWidget.h"
 
@@ -369,5 +372,12 @@ void PointCloud::DeawBoundingBox()
 	}
 }
 
+
+void PointCloud::Triangulation()
+{
+	std::list<CLine> activeList;			//	活动边表
+	std::list< CFace> ST;					//	三角网格
+
+}
 
 

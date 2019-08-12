@@ -38,12 +38,12 @@ bool Common::OnTheSameSide(const CVector &normal, const Point &origin, const std
 	int i = 0;
 	double temp = 0.0f;
 	vtkSmartPointer<vtkPlane> plane = vtkSmartPointer<vtkPlane>::New();
-	plane->SetOrigin(origin.x, origin.y, origin.z);
+	plane->SetOrigin(origin._x, origin._y, origin._z);
 	plane->SetNormal(normal.GetX(), normal.GetY(), normal.GetZ());
 
 	for (auto iter : nearPoints)
 	{
-		temp = plane->EvaluateFunction(iter.x, iter.y, iter.z);
+		temp = plane->EvaluateFunction(iter._x, iter._y, iter._z);
 		if ((temp  - 0.0f)> 0)
 			i++;
 		else if ((temp - 0.0f) < 0)
