@@ -24,6 +24,7 @@ PointCloud::PointCloud(QWidget *parent)
 }
 
 
+//读文件--asc/pcd
 void PointCloud::OnReadFile()
 {
 	//_cloud->clear();
@@ -58,6 +59,8 @@ void PointCloud::OnReadFile()
 	//ui.qvtkWidget->update();
 }
 
+
+//另存为PLY文件
 void PointCloud::SaveAsPlY()
 {
 	fs::path tempFileName = "";
@@ -69,9 +72,9 @@ void PointCloud::SaveAsPlY()
 }
 
 
+//贪婪三角形重建
 void PointCloud::greedyTriangulation_reconstruct()
 {
-
 	//cloud_with_noramls=cloud+normals
 	pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals = getPointNormal();
 
@@ -112,10 +115,11 @@ void PointCloud::greedyTriangulation_reconstruct()
 	std::cout << "三角面片划分完成" << std::endl;
 
 }
+
+
+//泊松三角形重建
 void PointCloud::poisson_reconstruct()
 {
-
-
 	//cloud_with_noramls=cloud+normals
 	pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals = getPointNormal();
 
@@ -160,6 +164,8 @@ pcl::PointCloud<pcl::PointNormal>::Ptr PointCloud::getPointNormal()
 	return cloud_with_normals;
 }
 
+
+//打开pcd文件
 void  PointCloud::open_pcd_file()
 {
 	QString filter;
@@ -199,6 +205,7 @@ void	PointCloud::OnClear()
 
 }
 
+
 void PointCloud::OnActionSearchKNear()
 {
 	KNearWidget *widget = new KNearWidget();
@@ -211,20 +218,70 @@ void PointCloud::SearchKNear(float x, float y, float z, int &k)
 {
 	// Neighbors within voxel search
 	KNearWidget *widget = new KNearWidget();
-
-	widget->show();
-	
+	widget->show();	
 }
 
 
 //找到八叉树中的叶子节点并显示
 void PointCloud::ShowLeafNode()
 {
-	
+	pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> tree(Resolution);
+	tree.setInputCloud(_cloud);
+	tree.addPointsFromInputCloud();
+
+	int depth = tree.getTreeDepth();
+	for (auto it = tree.begin(depth); it != tree.end(); it++)
+	{
+		if (it.isLeafNode())
+		{
+			Eigen::Vector3f min_pt, max_pt;
+			tree.getVoxelBounds(it, min_pt, max_pt);
+			std::cout << "极小值：" << min_pt.x() << "\t" << min_pt.y() << "\t" << min_pt.z() << std::endl;
+			std::cout << "极大值：" << max_pt.x() << "\t" << max_pt.y() << "\t" << max_pt.z() << std::endl;
+			std::cout << std::endl;
+		}
+	}
+
+
+	/*pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> tree(Resolution);
+	tree.setInputCloud(_cloud);         
+	tree.addPointsFromInputCloud();  
+
+	int depth = tree.getTreeDepth();
+	std::vector<Eigen::Vector3f> min, max;
+	for (auto it = tree.begin(depth); it != tree.end(); it++)
+	{
+		if (it.isLeafNode())
+		{
+			Eigen::Vector3f min_pt, max_pt;
+			tree.getVoxelBounds(it, min_pt, max_pt);
+			min.push_back(min_pt);
+			max.push_back(max_pt);
+		}	
+	}
+
+	float r = 0.0f, g = 0.0f, b = 1.0f;
+	int viewport = 0;
+	pcl::visualization::PCLVisualizer viewer;
+	string name;
+	for (auto it = min.begin(),its = max.begin(); it != min.end(); it++)
+	{
+		r = it->x();
+		g = it->y();
+		b = it->z();
+		name = viewport + "";
+		viewer.addCube(it->x(), its->x(), it->y(), its->y(), it->z(), its->z(), r, g, b, name, viewport);
+		viewport++;
+	}
+	viewer.setBackgroundColor(0.0, 0.0, 0.0);
+	while (!viewer.wasStopped())
+	{
+		viewer.spinOnce();
+	}*/
 }
 
 
-//画包围盒
+//为整个模型画包围盒
 void PointCloud::DeawBoundingBox()
 {
 	//获取点云质心
@@ -310,3 +367,6 @@ void PointCloud::DeawBoundingBox()
 		viewer.spinOnce();
 	}
 }
+
+
+

@@ -14,12 +14,15 @@ public:
 	PointCloud(QWidget *parent = Q_NULLPTR);
 	pcl::PointCloud<pcl::PointNormal>::Ptr getPointNormal();
 
-private:
+private:	
 	Ui::PointCloudClass ui;
-
+	
 	pcl::visualization::PCLVisualizer::Ptr _viewer;
 	pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud;
 	PCLViewer _pclViewer;
+
+public:
+	const float Resolution = 5.0f;
 private:
 private slots:
 
@@ -40,5 +43,4 @@ private slots:
 	/*********八叉树实现点云数据的空间划分*********/
 	void SearchKNear(float x, float y, float z, int &k);									//	搜索八叉树中指定点的且半径为k领域点
 	void ShowLeafNode();										//	显示空间划分的叶子节点
-
 };
