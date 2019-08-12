@@ -21,7 +21,7 @@ void Common::PrintString(const string &str)
 }
 
 
-<<<<<<< HEAD
+//<<<<<<< HEAD
 bool Common::NoInclude()
 {
 
@@ -52,8 +52,58 @@ bool Common::OnTheSameSide(const CVector &normal, const Point &origin, const std
 	return (i == nearPoints.size() ? true :false);
 }
 
-bool Common::CalNormalVector(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3,
-	float &dx, float &dy, float &dz)
+bool Common::GetTwoLineIntersection(float _a1, float _b1, float _c1, float _a2, float _b2, float _c2, float &x, float &y)
+{
+	//_a1x+_b1y=_c1;---(1)
+	//_a2x+_b2y=_c2;---(2)
+	//
+	if (_c1 == 0 && _c2 == 0)
+	{
+		//2个未知数2个方程组成的齐次方程组求解
+		//系数矩阵B
+		//| _a1 _b1 |
+		//| _a2 _b2 |
+		float DB = _a1 * _b2 - _a2 * _b1;
+		if (DB != 0)//有唯一零解
+		{
+			x = 0;
+			y = 0;
+			return true;
+		}
+		else//有无数解
+		{
+			x = 0;
+			y = 0;
+			return false;
+		}
+	}
+	else
+	{
+		//2个未知数2个方程组成的非齐次方程组求解
+		//系数矩阵B
+		//| _a1 _b1 |
+		//| _a2 _b2 |
+		//
+		float DB = _a1 * _b2 - _a2 * _b1;
+		if (DB != 0)//有唯一解
+		{
+			float dD1 = _c1 * _b2 - _c2 * _b1;
+			float dD2 = _a1 * _c2 - _a2 * _c1;
+			x = dD1 / DB;
+			y = dD2 / DB;
+			return true;
+		}
+		else//有无数解或者无解
+		{
+			x = 0;
+			y = 0;
+			return false;
+		}
+	}
+	return false;
+}
+
+bool Common::CalNormalVector(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3,float &dx, float &dy, float &dz)
 {
 	//float a1,a2,b1,b2,c1,c2;
 	//
@@ -130,56 +180,8 @@ bool Common::CalNormalVector(float x1, float y1, float z1, float x2, float y2, f
 	return false;
 }
 
-bool Common::GetTwoLineIntersection(float _a1, float _b1, float _c1, float _a2, float _b2, float _c2, float &x, float &y)
-{
-	//_a1x+_b1y=_c1;---(1)
-	//_a2x+_b2y=_c2;---(2)
-	//
-	if (_c1 == 0 && _c2 == 0)
-	{
-		//2个未知数2个方程组成的齐次方程组求解
-		//系数矩阵B
-		//| _a1 _b1 |
-		//| _a2 _b2 |
-		float DB = _a1 * _b2 - _a2 * _b1;
-		if (DB != 0)//有唯一零解
-		{
-			x = 0;
-			y = 0;
-			return true;
-		}
-		else//有无数解
-		{
-			x = 0;
-			y = 0;
-			return false;
-		}
-	}
-	else
-	{
-		//2个未知数2个方程组成的非齐次方程组求解
-		//系数矩阵B
-		//| _a1 _b1 |
-		//| _a2 _b2 |
-		//
-		float DB = _a1 * _b2 - _a2 * _b1;
-		if (DB != 0)//有唯一解
-		{
-			float dD1 = _c1 * _b2 - _c2 * _b1;
-			float dD2 = _a1 * _c2 - _a2 * _c1;
-			x = dD1 / DB;
-			y = dD2 / DB;
-			return true;
-		}
-		else//有无数解或者无解
-		{
-			x = 0;
-			y = 0;
-			return false;
-		}
-	}
-	return false;
-=======
+
+//=======
 // 判断三点是否在同一直线上以及领域点是否在三点构成的圆球中
 bool Common::Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk, std::vector<pcl::PointXYZ> near_pi)
 {
@@ -234,5 +236,5 @@ bool Common::Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk,
 			return false;
 	}
 	return true;
->>>>>>> origin/dev_hhy
+//>>>>>>> origin/dev_hhy
 }

@@ -4,10 +4,10 @@ class Common
 public:
 	Common();
 	~Common();
-	
 	/**************通用功能函数****************/
+
 	static void PrintString(const string &str);
-<<<<<<< HEAD
+//<<<<<<< HEAD
 	//	三点共线
 	static bool Collineation(const Point &point1, const Point &point2, const Point &point3);
 	//	经过pi,pj,pk三点的圆球内不包括Near(Pi)中的领域点
@@ -31,9 +31,9 @@ public:
 	//	根据克莱姆法则求解带两个参数的方程
 	static bool GetTwoLineIntersection(float _a1, float _b1, float _c1, float _a2, float _b2, float _c2, float &x, float &y);
 
-=======
+//=======
 	// 判断三点是否在同一直线上以及领域点是否在三点构成的圆球中
 	bool Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk, std::vector<pcl::PointXYZ> near_pi);
->>>>>>> origin/dev_hhy
+//>>>>>>> origin/dev_hhy
 };
 
