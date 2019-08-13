@@ -5,7 +5,7 @@
 class CLine
 {
 public:
-	CLine();
+	CLine(struct Point pointStart,struct Point pointEnd);
 	~CLine();
 private:
 	struct Point _pointStart;

@@ -2,8 +2,11 @@
 #include "CLine.h"
 
 
-CLine::CLine()
+CLine::CLine(struct Point pointStart, struct Point pointEnd)
 {
+	_pointStart = pointStart;
+	_pointEnd = pointEnd;
+
 }
 
 

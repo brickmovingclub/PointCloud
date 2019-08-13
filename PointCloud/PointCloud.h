@@ -34,6 +34,7 @@ private slots:
 	void OnActionSearchKNear();
 	void DeawBoundingBox();									//	给模型画包围盒
 
+	void Triangulation();									//	用八叉树实现三角剖分
 
 	/**********KT树实现点云数据的空间划分*************/
 		
