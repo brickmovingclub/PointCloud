@@ -8,10 +8,6 @@ public:
 
 	static void PrintString(const string &str);
 //<<<<<<< HEAD
-	//	三点共线
-	static bool Collineation(const Point &point1, const Point &point2, const Point &point3);
-	//	经过pi,pj,pk三点的圆球内不包括Near(Pi)中的领域点
-	static bool NoInclude();
 	//	领域中的点在三角面片同侧
 	static bool OnTheSameSide(const CVector &normal,const Point &origin,const std::list<Point> &nearPoints);
 
@@ -35,5 +31,6 @@ public:
 	// 判断三点是否在同一直线上以及领域点是否在三点构成的圆球中
 	bool Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk, std::vector<pcl::PointXYZ> near_pi);
 //>>>>>>> origin/dev_hhy
+	void findCandidatePoints(Point pi, Point pj, Point pk);
 };
 

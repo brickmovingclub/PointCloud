@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "CLine.h"
 
 #include "CVector.h"
 
@@ -22,17 +23,7 @@ void Common::PrintString(const string &str)
 
 
 //<<<<<<< HEAD
-bool Common::NoInclude()
-{
-
-	return false;
-}
-
-bool Common::Collineation(const Point &point1, const Point &point2, const Point &point3)
-{
-	return false;
-}
-
+//	领域中的点在三角面片同侧
 bool Common::OnTheSameSide(const CVector &normal, const Point &origin, const std::list<Point> &nearPoints)
 {
 	int i = 0;
@@ -52,6 +43,8 @@ bool Common::OnTheSameSide(const CVector &normal, const Point &origin, const std
 	return (i == nearPoints.size() ? true :false);
 }
 
+
+//	根据克莱姆法则求解带两个参数的方程
 bool Common::GetTwoLineIntersection(float _a1, float _b1, float _c1, float _a2, float _b2, float _c2, float &x, float &y)
 {
 	//_a1x+_b1y=_c1;---(1)
@@ -103,6 +96,8 @@ bool Common::GetTwoLineIntersection(float _a1, float _b1, float _c1, float _a2, 
 	return false;
 }
 
+
+//	求空间平面的法向量
 bool Common::CalNormalVector(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3,float &dx, float &dy, float &dz)
 {
 	//float a1,a2,b1,b2,c1,c2;
@@ -237,4 +232,46 @@ bool Common::Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk,
 	}
 	return true;
 //>>>>>>> origin/dev_hhy
+}
+
+
+void Common::findCandidatePoints(Point pi, Point pj, Point pk)
+{
+	// TODO: 在此处添加实现代码.
+	//得到三边边长，判断三角形类型
+	CLine l;
+	float line_ij = l.LineLength_Point(pi, pj);
+	float line_ik = l.LineLength_Point(pi, pk);
+	float line_jk = l.LineLength_Point(pj, pk);
+	float a, b, c;
+	c = max(line_ij, line_ik);
+	c = max(c, line_jk);
+	if (line_ij == c)
+	{
+		a = line_ik;
+		b = line_jk;
+	}
+	else if (line_ik == c)
+	{
+		a = line_ij;
+		b = line_jk;
+	}
+	else
+	{
+		a = line_ij;
+		b = line_ik;
+	}
+	//求领域半径r
+	float r;
+	if (c * c > a * a + b * b) //钝角三角形
+		r = c;
+	else
+		r = (a + b + c) / 3;
+
+	Point pm;
+	pm._x = (pi._x + pj._x) / 2;
+	pm._y = (pi._y + pj._y) / 2;
+	pm._z = (pi._z + pj._z) / 2;
+
+	//计算点pm的r范围内的领域点集
 }
