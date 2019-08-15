@@ -2,7 +2,7 @@
 #include "CFace.h"
 
 
-CFace::CFace(const struct Point &point1, const struct Point &point2, const struct Point &point3)
+CFace::CFace(const pcl::PointXYZ &point1, const pcl::PointXYZ &point2, const pcl::PointXYZ &point3)
 {
 	_point1 = point1;
 	_point2 = point2;

@@ -5,10 +5,12 @@
 class CLine
 {
 public:
-	CLine(struct Point pointStart,struct Point pointEnd);
+	CLine();
+	CLine(const CLine &obj);
+	CLine(const pcl::PointXYZ &pointStart, const pcl::PointXYZ &pointEnd);
 	~CLine();
 private:
-	struct Point _pointStart;
-	struct Point _pointEnd;
+	pcl::PointXYZ _pointStart;
+	pcl::PointXYZ _pointEnd;
 };
 

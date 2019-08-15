@@ -6,14 +6,10 @@ public:
 	~Common();
 	/**************通用功能函数****************/
 
-	static void PrintString(const string &str);
-//<<<<<<< HEAD
-	//	三点共线
-	static bool Collineation(const Point &point1, const Point &point2, const Point &point3);
-	//	经过pi,pj,pk三点的圆球内不包括Near(Pi)中的领域点
-	static bool NoInclude();
-	//	领域中的点在三角面片同侧
-	static bool OnTheSameSide(const CVector &normal,const Point &origin,const std::list<Point> &nearPoints);
+	//	领域中的点在三角面片同侧(normal 为法向量，origin 为三角面片上任意一点)
+	static bool OnTheSameSide(const CVector &normal,const pcl::PointXYZ &origin,const std::vector<std::pair<double, pcl::PointXYZ>> &nearPoints);
+	//static bool OnTheSameSide(const pcl::PointXYZ &pi, const pcl::PointXYZ &pj, const pcl::PointXYZ &pk, const std::vector<std::pair<double,Point>> &nearPoints);
+
 
 	//	浮点数的大小比较
 	#ifndef ABS
@@ -33,7 +29,11 @@ public:
 
 //=======
 	// 判断三点是否在同一直线上以及领域点是否在三点构成的圆球中
-	bool Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk, std::vector<pcl::PointXYZ> near_pi);
+	static bool Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk, std::vector<std::pair<double, pcl::PointXYZ>> &near_pi);
+
+	//	半径领域点集搜索
+	static void NearRadiusSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,const pcl::PointXYZ &point, const float &radius, std::vector<std::pair< double, pcl::PointXYZ>> &nearPoint);
+
 //>>>>>>> origin/dev_hhy
 };
 

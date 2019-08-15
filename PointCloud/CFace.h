@@ -4,12 +4,12 @@
 class CFace
 {
 public:
-	CFace(const struct Point &point1, const struct Point &point2, const struct Point &point3);
+	CFace(const pcl::PointXYZ &point1, const pcl::PointXYZ &point2, const pcl::PointXYZ &point3);
 	~CFace();
 private:
-	struct Point _point1;
-	struct Point _point2;
-	struct Point _point3;
+	pcl::PointXYZ _point1;
+	pcl::PointXYZ _point2;
+	pcl::PointXYZ _point3;
 };
 
 // Íø¸ñÇúÃæ std::list<CFace> ST
