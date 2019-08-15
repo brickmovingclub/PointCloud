@@ -75,6 +75,7 @@ float CVector::vectorInnerProduct(CVector &a, CVector &b)
 }
 
 
+//由p1->p2->p3构成的面片的法向量
 CVector CVector::GetNormal(Point &p1, Point &p2, Point &p3)
 {
 	// TODO: 在此处添加实现代码.

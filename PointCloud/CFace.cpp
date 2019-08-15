@@ -13,3 +13,32 @@ CFace::CFace(const struct Point &point1, const struct Point &point2, const struc
 CFace::~CFace()
 {
 }
+
+
+Point CFace::GetPoint1()const
+{
+	return _point1;
+}
+Point CFace::GetPoint2()const
+{
+	return _point2;
+}
+Point CFace::GetPoint3()const
+{
+	return _point3;
+}
+
+void  CFace::operator =(const CFace &p)
+{
+	this->_point1._x = p._point1._x;
+	this->_point1._y = p._point1._y;
+	this->_point1._z = p._point1._z;
+
+	this->_point2._x = p._point2._x;
+	this->_point2._y = p._point2._y;
+	this->_point2._z = p._point2._z;
+
+	this->_point3._x = p._point3._x;
+	this->_point3._y = p._point3._y;
+	this->_point3._z = p._point3._z;
+}

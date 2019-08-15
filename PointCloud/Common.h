@@ -31,6 +31,11 @@ public:
 	// 判断三点是否在同一直线上以及领域点是否在三点构成的圆球中
 	bool Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk, std::vector<pcl::PointXYZ> near_pi);
 //>>>>>>> origin/dev_hhy
+	//选择候选点集
 	std::vector<int> findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<bool> flag,std::vector<CLine> ActiveE, CLine CurrentE);
+	//选择最佳点
+	Point FindBestPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<int> near_pm, CLine CurrentE, std::list<CFace> ST, std::vector<CLine> InnerE);
+	// 寻找点的邻接三角形,并判断是否共边
+	bool findNearFace_Point(CFace curFace, Point pc, std::list<CFace> ST);
 };
 

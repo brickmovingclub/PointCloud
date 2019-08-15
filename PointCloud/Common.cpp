@@ -1,7 +1,10 @@
 #include "stdafx.h"
+
 #include "CLine.h"
 
 #include "CVector.h"
+
+#include "CFace.h"
 
 #include "Common.h"
 
@@ -235,6 +238,7 @@ bool Common::Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk,
 }
 
 
+//选择候选点集
 std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<bool> flag,std::vector<CLine> ActiveE, CLine CurrentE)
 {
 	//得到三边边长，判断三角形类型
@@ -351,4 +355,124 @@ std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr
 			near_pm.erase(near_pm.begin() + i);
 	}
 	return near_pm; //若为空，则pi-pj是边界边
+}
+
+
+//选择最佳点
+Point Common::FindBestPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<int> near_pm, CLine CurrentE, std::list<CFace> ST, std::vector<CLine> InnerE)
+{
+	// TODO: 在此处添加实现代码.
+	CVector vec; //当前活动边所在三角形的法向量
+	vec = vec.GetNormal(pi, pj, pk);
+	const float PI = 3.1415926;
+	float angle_min, angle_max; //候选三角形的角度的最大值与最小值
+	CLine l;
+	float a = l.LineLength_Point(pi, pj);
+	float b = l.LineLength_Point(pj, pk);
+	float c = l.LineLength_Point(pk, pi);
+	float maxSide = max(a, b);
+	maxSide = max(maxSide, c);
+	if (a == maxSide)
+		angle_max = acos((pow(b, 2) + pow(c, 2) - pow(a, 2)) / (2 * b * c)) * 180 / PI;
+	else if (b == maxSide)
+		angle_max = acos((pow(a, 2) + pow(c, 2) - pow(b, 2)) / (2 * a * c)) * 180 / PI;
+	else
+		angle_max = acos((pow(b, 2) + pow(a, 2) - pow(c, 2)) / (2 * b * a)) * 180 / PI;
+	float minSide = min(a, b);
+	minSide = min(minSide, c);
+	if (a == minSide)
+		angle_min = acos((pow(b, 2) + pow(c, 2) - pow(a, 2)) / (2 * b * c)) * 180 / PI;
+	else if (b == minSide)
+		angle_min = acos((pow(a, 2) + pow(c, 2) - pow(b, 2)) / (2 * a * c)) * 180 / PI;
+	else
+		angle_min = acos((pow(b, 2) + pow(a, 2) - pow(c, 2)) / (2 * b * a)) * 180 / PI;
+
+	std::map<float, int> joinCosts;//添加的代价
+	float angle_cur;//当前备选三角片的最大内角,大边对大角
+	//为候选点添加代价
+	for (auto it = near_pm.begin(); it != near_pm.end(); it++)
+	{
+		Point candidateP;
+		candidateP._x = _cloud->points[*it].x;
+		candidateP._y = _cloud->points[*it].y;
+		candidateP._z = _cloud->points[*it].z;
+		float joinCost; //节点candidateP的代价
+		float cost_angle1, cost_angle2;
+		//候选三角形的法向量
+		CVector newVec = vec.GetNormal(pi, candidateP, pj);
+		float angle_cos; 
+		angle_cos = vec.vectorInnerProduct(vec, newVec) / (vec.vectorMag(vec) * vec.vectorMag(newVec));
+		cost_angle1 = sqrt(1 - angle_cos * angle_cos);
+
+		a = l.LineLength_Point(pi, candidateP);
+		b = l.LineLength_Point(candidateP, pj);
+		c = l.LineLength_Point(pj, pi);
+		maxSide = max(a, b);
+		maxSide = max(maxSide, c);		
+		if (a == maxSide)
+			angle_cur = acos((pow(b, 2) + pow(c, 2) - pow(a, 2)) / (2 * b * c)) * 180 / PI;
+		else if (b == maxSide)
+			angle_cur = acos((pow(a, 2) + pow(c, 2) - pow(b, 2)) / (2 * a * c)) * 180 / PI;
+		else
+			angle_cur = acos((pow(b, 2) + pow(a, 2) - pow(c, 2)) / (2 * b * a)) * 180 / PI;
+		
+		cost_angle2 = abs((angle_cur - angle_min) / (angle_max - angle_min));
+		joinCost = cost_angle1 + cost_angle2;
+		joinCosts.insert(pair<float, int>(joinCost, *it));
+	}
+	
+	//候选三角片质量检测
+	Point bestP;
+	for (auto it = joinCosts.begin(); it != joinCosts.end(); it++)
+	{
+		Point pc;
+		pc._x = _cloud->points[it->second].x;
+		pc._y = _cloud->points[it->second].y;
+		pc._z = _cloud->points[it->second].z;	
+
+		//检测非流行点
+		CFace curFace(pi, pj, pc);
+		if (findNearFace_Point(curFace, pc, ST))
+			continue;
+
+		//检测非流行边
+		CLine p_ic(pi, pc);
+		vector<CLine>::iterator its = find(InnerE.begin(), InnerE.end(), p_ic);
+		if (its != InnerE.end())
+			continue;
+		CLine p_cj(pc, pj);
+		vector<CLine>::iterator its = find(InnerE.begin(), InnerE.end(), p_cj);
+		if (its != InnerE.end())
+			continue;
+
+		//检测自交三角形
+	}
+	return bestP;
+}
+
+
+// 寻找点的邻接三角形,并判断是否共边
+bool Common::findNearFace_Point(CFace curFace, Point pc, std::list<CFace> ST)
+{
+	// TODO: 在此处添加实现代码.
+	std::set<Point> points;
+	points.insert(curFace.GetPoint1());
+	points.insert(curFace.GetPoint2());
+	points.insert(curFace.GetPoint3());
+
+	for (auto it = ST.begin(); it != ST.end; it++)
+	{
+		//是点pc的邻接三角形		
+		if (((it->GetPoint1()._x == pc._x) && (it->GetPoint1()._y == pc._y) && (it->GetPoint1()._z == pc._z)) 
+			|| ((it->GetPoint2()._x == pc._x) && (it->GetPoint2()._y == pc._y) && (it->GetPoint2()._z == pc._z))
+			|| ((it->GetPoint3()._x == pc._x) && (it->GetPoint3()._y == pc._y) && (it->GetPoint3()._z == pc._z)))
+		{
+			points.insert(it->GetPoint1());
+			points.insert(it->GetPoint2());
+			points.insert(it->GetPoint3());
+			if (points.size <= 4)
+				return false;
+		}			
+	}
+	return true;
 }
