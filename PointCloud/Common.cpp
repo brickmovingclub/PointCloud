@@ -235,9 +235,8 @@ bool Common::Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk,
 }
 
 
-void Common::findCandidatePoints(Point pi, Point pj, Point pk)
+std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<bool> flag,std::vector<CLine> ActiveE, CLine CurrentE)
 {
-	// TODO: 在此处添加实现代码.
 	//得到三边边长，判断三角形类型
 	CLine l;
 	float line_ij = l.LineLength_Point(pi, pj);
@@ -274,4 +273,82 @@ void Common::findCandidatePoints(Point pi, Point pj, Point pk)
 	pm._z = (pi._z + pj._z) / 2;
 
 	//计算点pm的r范围内的领域点集
+	std::vector<int> near_pm; 
+
+
+	//精简领域点集
+	int size = near_pm.size();
+	for (int i = 0; i < size; i++)
+	{
+		//删除固定点与排除点
+		if (flag[near_pm[i]])
+			near_pm.erase(near_pm.begin() + i);
+	}
+	if(near_pm.empty()) //边pi-pj是边界边
+		return near_pm;
+
+	//找到pi,pj相邻的活动点
+	std::vector<CLine>::iterator it = std::find(ActiveE.begin(), ActiveE.end(), CurrentE);
+	it--;
+	Point pa = it->getPointStart();
+	it++; it++;
+	Point pb = it->getPointEnd();
+
+	//边角度约束简化
+	CVector p_ia(pa._x - pi._x, pa._y - pi._y, pa._z - pi._z);
+	CVector p_ij(pj._x - pi._x, pj._y - pi._y, pj._z - pi._z);
+	CVector p_jb(pb._x - pj._x, pb._y - pj._y, pb._z - pj._z);
+	CVector p_ji(pi._x - pj._x, pi._y - pj._y, pi._z - pj._z);
+
+	float angle_ia_ij = p_ia.vectorInnerProduct(p_ia, p_ij) / (p_ia.vectorMag(p_ia) * p_ia.vectorMag(p_ij));
+	float angle_jb_ji = p_jb.vectorInnerProduct(p_jb, p_ji) / (p_jb.vectorMag(p_jb) * p_jb.vectorMag(p_ji));
+	
+	float angleA = max(angle_ia_ij, (float)pow(2, 0.5) / 2);
+	float angleB = max(angle_jb_ji, (float)pow(2, 0.5) / 2);
+
+	float angle = 0.0f;
+	size = near_pm.size();
+	for (int i = 0; i < size; i++)
+	{
+		Point candidateP;
+		candidateP._x = _cloud->points[near_pm[i]].x;
+		candidateP._y = _cloud->points[near_pm[i]].y;
+		candidateP._z = _cloud->points[near_pm[i]].z;
+
+		CVector p_icandidateP(candidateP._x - pi._x, candidateP._y - pi._y, candidateP._z - pi._z);
+		CVector p_jcandidateP(candidateP._x - pj._x, candidateP._y - pj._y, candidateP._z - pj._z);
+
+		angle = p_ia.vectorInnerProduct(p_ia, p_icandidateP) / (p_ia.vectorMag(p_ia) * p_ia.vectorMag(p_icandidateP));
+		if (angle < angleA)
+		{
+			near_pm.erase(near_pm.begin() + i);
+			continue;
+		}
+		else
+		{
+			angle = p_jb.vectorInnerProduct(p_jb, p_jcandidateP) / (p_jb.vectorMag(p_jb) * p_jb.vectorMag(p_jcandidateP));
+			if (angle < angleB)
+				near_pm.erase(near_pm.begin() + i);
+		}		
+	}
+	if (near_pm.empty()) //边pi-pj是边界边
+		return near_pm;
+
+	//面角度约束简化
+	CVector vec;
+	vec = vec.GetNormal(pi, pj, pk);
+	size = near_pm.size();
+	for (int i = 0; i < size; i++)
+	{
+		Point candidateP;
+		candidateP._x = _cloud->points[near_pm[i]].x;
+		candidateP._y = _cloud->points[near_pm[i]].y;
+		candidateP._z = _cloud->points[near_pm[i]].z;
+
+		CVector newVec = vec.GetNormal(pi, candidateP, pj);
+		angle = vec.vectorInnerProduct(vec, newVec) / (vec.vectorMag(vec) * vec.vectorMag(newVec));
+		if (angle < pow(3, 0.5) / 2)
+			near_pm.erase(near_pm.begin() + i);
+	}
+	return near_pm; //若为空，则pi-pj是边界边
 }

@@ -4,7 +4,6 @@
 #include "CLine.h"
 #include "CFace.h"
 
-#include "FileDeal.h"
 #include "KNearWidget.h"
 
 #include "PointCloud.h"
@@ -50,7 +49,12 @@ void PointCloud::OnReadFile()
 		_pclViewer.AscToPcd(fileFullName);
 		_pclViewer.ReadPcdFile(_cloud, tempFileName);
 	}
-
+	
+	//标记所有的点均为自由点（非排除点与固定点）
+	for (auto it = _cloud->begin(); it != _cloud->end(); it++)
+	{
+		flag.push_back(false);
+	}
 
 	pcl::PCLPointCloud2 cloud_blob;
 	pcl::io::loadPCDFile(tempFileName.string(), cloud_blob);
@@ -170,7 +174,7 @@ pcl::PointCloud<pcl::PointNormal>::Ptr PointCloud::getPointNormal()
 
 
 //打开pcd文件
-void  PointCloud::open_pcd_file()
+void PointCloud::open_pcd_file()
 {
 	QString filter;
 	filter = "PCD file(*.pcd)";
@@ -180,7 +184,6 @@ void  PointCloud::open_pcd_file()
 		, dir.absolutePath(), filter);
 	if (fileName.isEmpty() == true)
 	{
-
 		std::cout << "empty pcd files";
 		return;
 	}
@@ -200,7 +203,7 @@ void  PointCloud::open_pcd_file()
 }
 
 
-void	PointCloud::OnClear()
+void PointCloud::OnClear()
 {
 	_cloud->clear();
 	//_cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
@@ -357,10 +360,17 @@ void PointCloud::DeawBoundingBox()
 void PointCloud::Triangulation()
 {
 	std::list<CLine> activeList;			//	活动边表
-	std::list< CFace> ST;					//	三角网格
+	std::list<CFace> ST;					//	三角网格
 
+	std::vector<CLine> ActiveE; //活动边
+	CLine CurrentE; // 当前活动边
+	std::vector<CLine> InnerE; //固定边
+	std::vector<Point> FreeP; //自由点
+	std::vector<Point> ActiveP; //活动点
+
+	
 	//	求种子三角形
-
+	
 }
 
 
