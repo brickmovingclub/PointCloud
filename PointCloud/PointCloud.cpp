@@ -1,9 +1,10 @@
 #include "stdafx.h"
 
 #include "CVector.h"
+#include "CLine.h"
+
 #include "Common.h"
 
-#include "CLine.h"
 #include "CFace.h"
 
 #include "KNearWidget.h"
@@ -362,7 +363,6 @@ void PointCloud::DrawBoundingBox()
 void PointCloud::Triangulation()
 {
 	std::list<CLine> activeList;			//	活动边表
-<<<<<<< HEAD
 	std::list< CFace> ST;					//	三角网格
 	int i = 0; int j = 0;
 	
@@ -433,19 +433,17 @@ void PointCloud::Triangulation()
 	activeList.push_back(lineij);	//	插入种子三角形的活动bian
 	activeList.push_back(linejk);
 	activeList.push_back(lineki);
-=======
+	
+	/*
 	std::list<CFace> ST;					//	三角网格
-
 	std::vector<CLine> ActiveE; //活动边
 	CLine CurrentE; // 当前活动边
 	std::vector<CLine> InnerE; //固定边
 	std::vector<Point> FreeP; //自由点
 	std::vector<Point> ActiveP; //活动点
-
+*/
 	
-	//	求种子三角形
 	
->>>>>>> origin/dev_hhy
 }
 
 

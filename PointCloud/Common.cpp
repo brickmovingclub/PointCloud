@@ -16,19 +16,9 @@ Common::~Common()
 }
 
 
-<<<<<<< HEAD
-bool Common::OnTheSameSide(const CVector &normal, const pcl::PointXYZ &origin, const std::vector<std::pair<double, pcl::PointXYZ>> &nearPoints)
-=======
-void Common::PrintString(const string &str)
-{
 
-}
-
-
-//<<<<<<< HEAD
 //	领域中的点在三角面片同侧
-bool Common::OnTheSameSide(const CVector &normal, const Point &origin, const std::list<Point> &nearPoints)
->>>>>>> origin/dev_hhy
+bool Common::OnTheSameSide(const CVector &normal, const pcl::PointXYZ &origin, const std::vector<std::pair<double, pcl::PointXYZ>> &nearPoints)
 {
 	int i = 0;
 	double temp = 0.0f;
@@ -46,8 +36,6 @@ bool Common::OnTheSameSide(const CVector &normal, const Point &origin, const std
 	}
 	return (i == nearPoints.size() ? true : false);
 }
-
-<<<<<<< HEAD
 /*
 bool Common::OnTheSameSide(const pcl::PointXYZ &pi, const pcl::PointXYZ &pj, const pcl::PointXYZ &pk, const std::vector<std::pair<double, Point>> &nearPoints)
 {
@@ -128,10 +116,10 @@ bool Common::OnTheSameSide(const pcl::PointXYZ &pi, const pcl::PointXYZ &pj, con
 	return false;
 }
 */
-=======
+//=======
 
 //	根据克莱姆法则求解带两个参数的方程
->>>>>>> origin/dev_hhy
+//>>>>>>> origin/dev_hhy
 bool Common::GetTwoLineIntersection(float _a1, float _b1, float _c1, float _a2, float _b2, float _c2, float &x, float &y)
 {
 	//_a1x+_b1y=_c1;---(1)
@@ -183,13 +171,13 @@ bool Common::GetTwoLineIntersection(float _a1, float _b1, float _c1, float _a2, 
 	return false;
 }
 
-<<<<<<< HEAD
-bool Common::CalNormalVector(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float &dx, float &dy, float &dz)
-=======
+//<<<<<<< HEAD
+//bool Common::CalNormalVector(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float &dx, float &dy, float &dz)
+//=======
 
 //	求空间平面的法向量
 bool Common::CalNormalVector(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3,float &dx, float &dy, float &dz)
->>>>>>> origin/dev_hhy
+//>>>>>>> origin/dev_hhy
 {
 	//float a1,a2,b1,b2,c1,c2;
 	//
