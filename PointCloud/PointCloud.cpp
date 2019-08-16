@@ -6,7 +6,6 @@
 #include "CLine.h"
 #include "CFace.h"
 
-#include "FileDeal.h"
 #include "KNearWidget.h"
 
 #include "PointCloud.h"
@@ -52,7 +51,12 @@ void PointCloud::OnReadFile()
 		_pclViewer.AscToPcd(fileFullName);
 		_pclViewer.ReadPcdFile(_cloud, tempFileName);
 	}
-
+	
+	//标记所有的点均为自由点（非排除点与固定点）
+	for (auto it = _cloud->begin(); it != _cloud->end(); it++)
+	{
+		flag.push_back(false);
+	}
 
 	pcl::PCLPointCloud2 cloud_blob;
 	pcl::io::loadPCDFile(tempFileName.string(), cloud_blob);
@@ -172,7 +176,7 @@ pcl::PointCloud<pcl::PointNormal>::Ptr PointCloud::getPointNormal()
 
 
 //打开pcd文件
-void  PointCloud::open_pcd_file()
+void PointCloud::open_pcd_file()
 {
 	QString filter;
 	filter = "PCD file(*.pcd)";
@@ -182,7 +186,6 @@ void  PointCloud::open_pcd_file()
 		, dir.absolutePath(), filter);
 	if (fileName.isEmpty() == true)
 	{
-
 		std::cout << "empty pcd files";
 		return;
 	}
@@ -202,7 +205,7 @@ void  PointCloud::open_pcd_file()
 }
 
 
-void	PointCloud::OnClear()
+void PointCloud::OnClear()
 {
 	_cloud->clear();
 	//_cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
@@ -231,28 +234,11 @@ void PointCloud::SearchKNear(float x, float y, float z, int &k)
 //找到八叉树中的叶子节点并显示
 void PointCloud::ShowLeafNode()
 {
-	pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> tree(Resolution);
+	float resolu = 0.01f;
+	pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> tree(resolu);
 	tree.setInputCloud(_cloud);
 	tree.addPointsFromInputCloud();
-
-	int depth = tree.getTreeDepth();
-	for (auto it = tree.begin(depth); it != tree.end(); it++)
-	{
-		if (it.isLeafNode())
-		{
-			Eigen::Vector3f min_pt, max_pt;
-			tree.getVoxelBounds(it, min_pt, max_pt);
-			std::cout << "极小值：" << min_pt.x() << "\t" << min_pt.y() << "\t" << min_pt.z() << std::endl;
-			std::cout << "极大值：" << max_pt.x() << "\t" << max_pt.y() << "\t" << max_pt.z() << std::endl;
-			std::cout << std::endl;
-		}
-	}
-
-
-	/*pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> tree(Resolution);
-	tree.setInputCloud(_cloud);         
-	tree.addPointsFromInputCloud();  
-
+	std::cout << "叶子节点个数：" << tree.getLeafCount() << std::endl;
 	int depth = tree.getTreeDepth();
 	std::vector<Eigen::Vector3f> min, max;
 	for (auto it = tree.begin(depth); it != tree.end(); it++)
@@ -263,27 +249,25 @@ void PointCloud::ShowLeafNode()
 			tree.getVoxelBounds(it, min_pt, max_pt);
 			min.push_back(min_pt);
 			max.push_back(max_pt);
-		}	
+		}
 	}
 
 	float r = 0.0f, g = 0.0f, b = 1.0f;
-	int viewport = 0;
 	pcl::visualization::PCLVisualizer viewer;
-	string name;
-	for (auto it = min.begin(),its = max.begin(); it != min.end(); it++)
+	int id = 0;
+	for (auto it = min.begin(), its = max.begin(); it != min.end(); it++, its++)
 	{
-		r = it->x();
-		g = it->y();
-		b = it->z();
-		name = viewport + "";
-		viewer.addCube(it->x(), its->x(), it->y(), its->y(), it->z(), its->z(), r, g, b, name, viewport);
-		viewport++;
+		std::cout << "极小值：" << it->x() << "\t" << it->y() << "\t" << it->z() << std::endl;
+		std::cout << "极大值：" << its->x() << "\t" << its->y() << "\t" << its->z() << std::endl;
+		std::cout << std::endl;
+		viewer.addCube(it->x(), its->x(), it->y(), its->y(), it->z(), its->z(), r, g, b, std::to_string(id));
+		id++;
 	}
 	viewer.setBackgroundColor(0.0, 0.0, 0.0);
 	while (!viewer.wasStopped())
 	{
 		viewer.spinOnce();
-	}*/
+	}
 }
 
 
@@ -378,6 +362,7 @@ void PointCloud::DrawBoundingBox()
 void PointCloud::Triangulation()
 {
 	std::list<CLine> activeList;			//	活动边表
+<<<<<<< HEAD
 	std::list< CFace> ST;					//	三角网格
 	int i = 0; int j = 0;
 	
@@ -448,6 +433,19 @@ void PointCloud::Triangulation()
 	activeList.push_back(lineij);	//	插入种子三角形的活动bian
 	activeList.push_back(linejk);
 	activeList.push_back(lineki);
+=======
+	std::list<CFace> ST;					//	三角网格
+
+	std::vector<CLine> ActiveE; //活动边
+	CLine CurrentE; // 当前活动边
+	std::vector<CLine> InnerE; //固定边
+	std::vector<Point> FreeP; //自由点
+	std::vector<Point> ActiveP; //活动点
+
+	
+	//	求种子三角形
+	
+>>>>>>> origin/dev_hhy
 }
 
 

@@ -21,5 +21,9 @@ public:
 	void  operator =(const CVector &vector);
 private:
 	float _x, _y, _z;
+public:
+	float vectorMag(CVector &a);
+	float vectorInnerProduct(CVector &a, CVector &b);
+	CVector GetNormal(Point &p1, Point &p2, Point &p3);
 };
 

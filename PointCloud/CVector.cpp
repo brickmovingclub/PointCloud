@@ -57,3 +57,34 @@ void  CVector::operator =(const CVector &vector)
 	this->_y = vector._y;
 	this->_z = vector._z;
 }
+
+
+//计算向量的模
+float CVector::vectorMag(CVector &a)
+{
+	// TODO: 在此处添加实现代码.
+	return sqrt(a._x * a._x + a._y * a._y + a._z * a._z);
+}
+
+
+//计算向量点乘
+float CVector::vectorInnerProduct(CVector &a, CVector &b)
+{
+	// TODO: 在此处添加实现代码.
+	return a._x * b._x + a._y * b._y + a._z * b._z;
+}
+
+
+CVector CVector::GetNormal(Point &p1, Point &p2, Point &p3)
+{
+	// TODO: 在此处添加实现代码.
+	CVector v1(p2._x - p1._x, p2._y - p1._y, p2._z - p1._z);
+	CVector v2(p3._x - p2._x, p3._y - p2._y, p3._z - p2._z);
+	CVector v3(p1._x - p3._x, p1._y - p3._y, p1._z - p3._z);
+
+	float na = (v2._y - v1._y)*(v3._z - v1._z) - (v2._z - v1._z)*(v3._y - v1._y);
+	float nb = (v2._z - v1._z)*(v3._x - v1._x) - (v2._x - v1._x)*(v3._z - v1._z);
+	float nc = (v2._x - v1._x)*(v3._y - v1._y) - (v2._y - v1._y)*(v3._x - v1._x);
+
+	return CVector(na, nb, nc);
+}
