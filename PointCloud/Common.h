@@ -34,6 +34,15 @@ public:
 	//	半径领域点集搜索
 	static void NearRadiusSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,const pcl::PointXYZ &point, const float &radius, std::vector<std::pair< double, pcl::PointXYZ>> &nearPoint);
 
+	//	k 近邻搜索
+	static void KNearSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const pcl::PointXYZ &searchPoint, const int &k, std::vector<std::pair< double, pcl::PointXYZ>> &KnearPoint);
+
+	//	体素搜索
+	static void VoxelSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const pcl::PointXYZ &searchPoint, std::vector<std::pair< double, pcl::PointXYZ>> &KnearPoint);
+
+
+	//	pcl 绘制线条
+	static void PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer);
 //>>>>>>> origin/dev_hhy
 };
 

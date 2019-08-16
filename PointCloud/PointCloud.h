@@ -32,7 +32,7 @@ private slots:
 	void OnClear();
 	void SaveAsPlY();										//		保存为ply格式
 	void OnActionSearchKNear();
-	void DeawBoundingBox();									//	给模型画包围盒
+	void DrawBoundingBox();									//	给模型画包围盒
 
 	void Triangulation();									//	用八叉树实现三角剖分
 

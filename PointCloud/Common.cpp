@@ -295,7 +295,7 @@ bool Common::Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk,
 	{
 		distance = sqrt(pow(centerpoint.x - it->second.x, 2) + pow(centerpoint.y - it->second.y, 2) + pow(centerpoint.z - it->second.z, 2));
 		if (distance < dR)
-			return false;
+			return false;		
 	}
 	return true;
 	//>>>>>>> origin/dev_hhy
@@ -323,13 +323,97 @@ void Common::NearRadiusSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const p
 
 	if (octree.radiusSearch(point, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0)
 	{
+		int size = pointIdxRadiusSearch.size();
 		for (size_t i = 0; i < pointIdxRadiusSearch.size(); ++i)
+		{
 			nearPoint.push_back(std::make_pair(pointRadiusSquaredDistance[i], cloud->points[pointIdxRadiusSearch[i]]));
-			//std::cout << "    " << cloud->points[pointIdxRadiusSearch[i]].x
-			//<< " " << cloud->points[pointIdxRadiusSearch[i]].y
-			//<< " " << cloud->points[pointIdxRadiusSearch[i]].z
-			//<< " (squared distance: " << pointRadiusSquaredDistance[i] << ")" << std::endl;
+			std::cout << "    " << cloud->points[pointIdxRadiusSearch[i]].x
+			<< " " << cloud->points[pointIdxRadiusSearch[i]].y
+			<< " " << cloud->points[pointIdxRadiusSearch[i]].z
+			<< " (squared distance: " << pointRadiusSquaredDistance[i] << ")" << std::endl;
+		}
+			
 	}
 
 
+}
+
+void Common::KNearSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,const pcl::PointXYZ &searchPoint,const int &k, std::vector<std::pair< double, pcl::PointXYZ>> &KnearPoint)
+{
+	
+
+	float resolution = 5.0f;
+
+	pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree(resolution);
+
+	octree.setInputCloud(cloud);
+	octree.addPointsFromInputCloud();
+
+	std::vector<int> pointIdxNKNSearch;
+	std::vector<float> pointNKNSquaredDistance;
+
+
+	if (octree.nearestKSearch(searchPoint, k, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
+	{
+		int size = pointIdxNKNSearch.size();
+
+		for (size_t i = 0; i < pointIdxNKNSearch.size(); ++i)
+		{
+			KnearPoint.push_back(std::make_pair(pointNKNSquaredDistance[i], cloud->points[pointIdxNKNSearch[i]]));
+
+			std::cout << "    " << cloud->points[pointIdxNKNSearch[i]].x
+				<< " " << cloud->points[pointIdxNKNSearch[i]].y
+				<< " " << cloud->points[pointIdxNKNSearch[i]].z
+				<< " (squared distance: " << pointNKNSquaredDistance[i] << ")" << std::endl;
+		}
+			
+	}
+}
+
+void Common::VoxelSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const pcl::PointXYZ &searchPoint, std::vector<std::pair< double, pcl::PointXYZ>> &KnearPoint)
+{
+
+	float resolution = 5.0f;
+
+	pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree(resolution);
+
+	octree.setInputCloud(cloud);
+	octree.addPointsFromInputCloud();
+
+	std::vector<int> pointIdxVec;
+
+	if (octree.voxelSearch(searchPoint, pointIdxVec))
+	{
+		std::cout << "Neighbors within voxel search at (" << searchPoint.x
+			<< " " << searchPoint.y
+			<< " " << searchPoint.z << ")"
+			<< std::endl;
+
+		int size = pointIdxVec.size();
+
+		for (size_t i = 0; i < pointIdxVec.size(); ++i)
+		{
+			KnearPoint.push_back(std::make_pair(0, cloud->points[pointIdxVec[i]]));
+			std::cout << "    " << cloud->points[pointIdxVec[i]].x
+				<< " " << cloud->points[pointIdxVec[i]].y
+				<< " " << cloud->points[pointIdxVec[i]].z << std::endl;
+		}
+			
+	}
+}
+
+void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer)
+{
+	//cloud = getpoint();//实时获取点云
+	pcl::PointXYZ  minPt, maxPt;
+	//viewer->removeAllShapes();
+	pcl::getMinMax3D(*cloud, minPt, maxPt);
+
+	pcl::PointXYZ origin(0, 0, 0);
+
+	viewer->setBackgroundColor(125, 125, 125); //背景色
+
+	viewer->addLine<pcl::PointXYZ>(origin, minPt, 255, 0, 0, "line1"); //红色线段,线的名字叫做"line1
+
+	viewer->spinOnce(100);
 }

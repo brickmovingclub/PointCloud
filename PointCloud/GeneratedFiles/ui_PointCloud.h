@@ -37,6 +37,7 @@ public:
     QAction *actionSearchKNear;
     QAction *actionSpaceDiv;
     QAction *actionShowLeafNode;
+    QAction *actionOctreeSpaceDev;
     QWidget *centralWidget;
     QVTKWidget *qvtkWidget;
     QMenuBar *menuBar;
@@ -76,6 +77,8 @@ public:
         actionSpaceDiv->setObjectName(QString::fromUtf8("actionSpaceDiv"));
         actionShowLeafNode = new QAction(PointCloudClass);
         actionShowLeafNode->setObjectName(QString::fromUtf8("actionShowLeafNode"));
+        actionOctreeSpaceDev = new QAction(PointCloudClass);
+        actionOctreeSpaceDev->setObjectName(QString::fromUtf8("actionOctreeSpaceDev"));
         centralWidget = new QWidget(PointCloudClass);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         qvtkWidget = new QVTKWidget(centralWidget);
@@ -114,19 +117,19 @@ public:
         menu->addAction(actiontanlan);
         menu->addAction(actionbosong);
         menuOcTree->addAction(actionSearchKNear);
-        menuOcTree->addAction(actionSpaceDiv);
         menuOcTree->addAction(actionShowLeafNode);
+        menuOcTree->addAction(actionOctreeSpaceDev);
 
         retranslateUi(PointCloudClass);
         QObject::connect(actionImport_file, SIGNAL(triggered(bool)), PointCloudClass, SLOT(OnReadFile()));
-        QObject::connect(actionPclShow, SIGNAL(triggered(bool)), PointCloudClass, SLOT(PCL()));
         QObject::connect(actionSave_as, SIGNAL(triggered(bool)), PointCloudClass, SLOT(SaveAsPlY()));
         QObject::connect(actionbosong, SIGNAL(triggered(bool)), PointCloudClass, SLOT(poisson_reconstruct()));
         QObject::connect(actiontanlan, SIGNAL(triggered(bool)), PointCloudClass, SLOT(greedyTriangulation_reconstruct()));
         QObject::connect(actionoepnPcdFile, SIGNAL(triggered(bool)), PointCloudClass, SLOT(open_pcd_file()));
         QObject::connect(actionSearchKNear, SIGNAL(triggered(bool)), PointCloudClass, SLOT(OnSearchKNear()));
         QObject::connect(actionShowLeafNode, SIGNAL(triggered(bool)), PointCloudClass, SLOT(ShowLeafNode()));
-        QObject::connect(action_drawBox, SIGNAL(triggered(bool)), PointCloudClass, SLOT(DeawBoundingBox()));
+        QObject::connect(action_drawBox, SIGNAL(triggered(bool)), PointCloudClass, SLOT(DrawBoundingBox()));
+        QObject::connect(actionOctreeSpaceDev, SIGNAL(triggered(bool)), PointCloudClass, SLOT(Triangulation()));
 
         QMetaObject::connectSlotsByName(PointCloudClass);
     } // setupUi
@@ -146,6 +149,7 @@ public:
         actionSearchKNear->setText(QApplication::translate("PointCloudClass", "\346\220\234\347\264\242k\351\230\266\351\242\206\345\237\237\347\202\271", nullptr));
         actionSpaceDiv->setText(QApplication::translate("PointCloudClass", "\347\251\272\351\227\264\345\210\222\345\210\206", nullptr));
         actionShowLeafNode->setText(QApplication::translate("PointCloudClass", "\346\230\276\347\244\272\345\217\266\345\255\220\350\212\202\347\202\271", nullptr));
+        actionOctreeSpaceDev->setText(QApplication::translate("PointCloudClass", "\345\205\253\345\217\211\346\240\221\347\251\272\351\227\264\345\210\222\345\210\206", nullptr));
         menuFile->setTitle(QApplication::translate("PointCloudClass", "File", nullptr));
         menuEdit->setTitle(QApplication::translate("PointCloudClass", "Edit", nullptr));
         menu->setTitle(QApplication::translate("PointCloudClass", "KtTree", nullptr));

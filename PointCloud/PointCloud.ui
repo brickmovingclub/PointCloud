@@ -62,8 +62,8 @@
      <string>OcTree</string>
     </property>
     <addaction name="actionSearchKNear"/>
-    <addaction name="actionSpaceDiv"/>
     <addaction name="actionShowLeafNode"/>
+    <addaction name="actionOctreeSpaceDev"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -139,6 +139,11 @@
     <string>显示叶子节点</string>
    </property>
   </action>
+  <action name="actionOctreeSpaceDev">
+   <property name="text">
+    <string>八叉树空间划分</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -157,22 +162,6 @@
    <signal>triggered(bool)</signal>
    <receiver>PointCloudClass</receiver>
    <slot>OnReadFile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>299</x>
-     <y>199</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionPclShow</sender>
-   <signal>triggered(bool)</signal>
-   <receiver>PointCloudClass</receiver>
-   <slot>PCL()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -284,7 +273,23 @@
    <sender>action_drawBox</sender>
    <signal>triggered(bool)</signal>
    <receiver>PointCloudClass</receiver>
-   <slot>DeawBoundingBox()</slot>
+   <slot>DrawBoundingBox()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>490</x>
+     <y>399</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionOctreeSpaceDev</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>PointCloudClass</receiver>
+   <slot>Triangulation()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -306,6 +311,7 @@
   <slot>OnClear()</slot>
   <slot>OnSearchKNear()</slot>
   <slot>ShowLeafNode()</slot>
-  <slot>DeawBoundingBox()</slot>
+  <slot>DrawBoundingBox()</slot>
+  <slot>Triangulation()</slot>
  </slots>
 </ui>
