@@ -8,6 +8,7 @@ public:
 	CLine();
 	CLine(const CLine &obj);
 	CLine(const pcl::PointXYZ &pointStart, const pcl::PointXYZ &pointEnd);
+	CLine(const Point &pointStart, const Point &pointEnd);
 	~CLine();
 	bool CLine::operator ==(const CLine& a)const;
 

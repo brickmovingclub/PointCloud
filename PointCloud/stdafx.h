@@ -86,6 +86,9 @@ struct Point
 	~Point()
 	{
 	}
-
+	bool operator<(const Point &p)
+	{
+		return (((this->_x < p._x) || ((this->_x == p._x) && (this->_y < p._y )) || ((this->_x == p._x) && (this->_y == p._y) &&(this->_z < p._z))) ?true:false);
+	}
 };
 

@@ -25,12 +25,12 @@ public:
 	float vectorMag(CVector &a);
 	float vectorInnerProduct(CVector &a, CVector &b);
 	CVector GetNormal(Point &p1, Point &p2, Point &p3);
-<<<<<<< HEAD
+//<<<<<<< HEAD
 	CVector GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &p3);
 
-=======
+//=======
 	// 两向量叉乘后的向量的模与向量点乘的比值
 	float MultiplicationCross(const CVector &vector);
->>>>>>> origin/dev_hhy
+//>>>>>>> origin/dev_hhy
 };
 

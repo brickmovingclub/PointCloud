@@ -93,7 +93,7 @@ CVector CVector::GetNormal(Point &p1, Point &p2, Point &p3)
 	return CVector(na, nb, nc);
 }
 
-<<<<<<< HEAD
+//<<<<<<< HEAD
 CVector CVector::GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &p3)
 {
 	CVector v1(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
@@ -105,7 +105,8 @@ CVector CVector::GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &
 	float nc = (v2._x - v1._x)*(v3._y - v1._y) - (v2._y - v1._y)*(v3._x - v1._x);
 
 	return CVector(na, nb, nc);
-=======
+}
+//=======
 
 // 两向量叉乘后的向量的模与向量点乘的比值
 float CVector::MultiplicationCross(const CVector &vector)
@@ -118,5 +119,5 @@ float CVector::MultiplicationCross(const CVector &vector)
 	float len = this->GetX() * vector._x + this->GetY() * vector._y + this->GetZ() * vector._z;
 	float len1 = (float)sqrt(normalx *normalx + normaly * normaly + normalz * normalz);
 	return len1 / len;
->>>>>>> origin/dev_hhy
+//>>>>>>> origin/dev_hhy
 }

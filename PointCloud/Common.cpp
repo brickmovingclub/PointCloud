@@ -573,18 +573,19 @@ std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr
 	return near_pm; //若为空，则pi-pj是边界边
 }
 
-<<<<<<< HEAD
+//<<<<<<< HEAD
 void  Common::GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &p3, CVector &vector)
 {
 	CVector v1(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
 	CVector v2(p3.x - p2.x, p3.y - p2.y, p3.z - p2.z);
 	CVector v3(p1.x - p3.x, p1.y - p3.y, p1.z - p3.z);
 
-	float na = (v2.GetY() - v1.GetY())*(v3.GetZ() - v1.GetZ()) - (v2.GetZ()- v1.GetZ())*(v3.GetY() - v1.GetY());
-	float nb = (v2.GetZ()- v1.GetZ())*(v3.GetX() - v1.GetX()) - (v2.GetX() - v1.GetX())*(v3.GetZ()- v1.GetZ());
+	float na = (v2.GetY() - v1.GetY())*(v3.GetZ() - v1.GetZ()) - (v2.GetZ() - v1.GetZ())*(v3.GetY() - v1.GetY());
+	float nb = (v2.GetZ() - v1.GetZ())*(v3.GetX() - v1.GetX()) - (v2.GetX() - v1.GetX())*(v3.GetZ() - v1.GetZ());
 	float nc = (v2.GetX() - v1.GetX())*(v3.GetY() - v1.GetY()) - (v2.GetY() - v1.GetY())*(v3.GetX() - v1.GetX());
 	vector.SetVector(na, nb, nc);
-=======
+}
+//=======
 
 //选择最佳点
 Point Common::FindBestPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<int> near_pm, CLine CurrentE, std::list<CFace> ST, std::vector<CLine> InnerE, std::map<Point, bool> flag)
@@ -851,7 +852,7 @@ float Common::TriangleArea(Point A, Point B, Point C)
 
 
 // 更新活动链表
-void Common::UpdateActiveList(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> InnerE, std::vector<Point> FreeP, std::vector<Point> ActiveP, std::map<Point, bool> flag)
+void Common::UpdateActiveList(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> InnerE, std::vector<Point> FreeP, std::vector<Point> ActiveP, std::map<Point, bool> flag, std::vector<CFace> ST)
 {
 	// 判断最佳点添加的位置
 	int type = BestPositionType(ActiveE, CurrentE, bestP, FreeP);
@@ -867,7 +868,7 @@ void Common::UpdateActiveList(std::vector<CLine> ActiveE, CLine CurrentE, Point 
 		UpdateMode2(ActiveE, CurrentE, bestP, InnerE, ActiveP, flag);
 		break;
 	case 3:
-		UpdateMode3(ActiveE, CurrentE, bestP, InnerE, FreeP, ActiveP, flag);
+		UpdateMode3(ActiveE, CurrentE, bestP, InnerE, ActiveP, flag, ST);
 		break;
 	default:
 		break;
@@ -984,9 +985,43 @@ void Common::UpdateMode2(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP
 
 
 //最佳点位于活动边上且与当前活动边没有相邻关系
-void Common::UpdateMode3(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> InnerE, std::vector<Point> FreeP, std::vector<Point> ActiveP, std::map<Point, bool> flag)
+void Common::UpdateMode3(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> InnerE, std::vector<Point> ActiveP, std::map<Point, bool> flag, std::vector<CFace> ST)
 {
 	// TODO: 在此处添加实现代码.
+	std::vector<CLine>::iterator it = find(ActiveE.begin(), ActiveE.end(), CurrentE);
+	std::vector<CLine>::iterator its = it;
+	std::vector<CLine>::iterator its_front;
+	if (its == ActiveE.end())
+		its = ActiveE.begin();
+	else
+		its++;
+	int holeSide_count = 1;
 
->>>>>>> origin/dev_hhy
+	while ((its->getPointEnd()._x != bestP._x)
+		|| (its->getPointEnd()._y != bestP._y)
+		|| (its->getPointEnd()._z != bestP._z))
+	{
+		InnerE.push_back(*its);
+		holeSide_count++;
+		std::vector<Point>::iterator iter = find(ActiveP.begin(), ActiveP.end(), its->getPointEnd());
+		ActiveP.erase(iter);
+		flag[its->getPointEnd()] = true;
+		if (its == ActiveE.begin())
+			its_front = ActiveE.end();
+		else
+			its_front = its--;
+		if (holeSide_count > 1) //可以构造三角形
+		{
+			CFace f(its_front->getPointStart(), its_front->getPointEnd(), its->getPointEnd());
+			ST.push_back(f);
+		}
+	}
+	CFace ff(its->getPointStart(), bestP, CurrentE.getPointEnd());
+	ST.push_back(ff);
+
+	ActiveE.erase(it, its);
+	CLine l(CurrentE.getPointStart(), bestP);
+	ActiveE.push_back(l);
 }
+
+//>>>>>>> origin/dev_hhy

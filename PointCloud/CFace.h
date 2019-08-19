@@ -5,6 +5,7 @@ class CFace
 {
 public:
 	CFace(const pcl::PointXYZ &point1, const pcl::PointXYZ &point2, const pcl::PointXYZ &point3);
+	CFace(const Point &point1, const Point &point2, const Point &point3);
 	~CFace();
 
 	Point GetPoint1()const;
@@ -13,9 +14,9 @@ public:
 
 	void  CFace::operator =(const CFace &p);
 private:
-	pcl::PointXYZ _point1;
-	pcl::PointXYZ _point2;
-	pcl::PointXYZ _point3;
+	Point _point1;
+	Point _point2;
+	Point _point3;
 };
 
 // Íø¸ñÇúÃæ std::list<CFace> ST

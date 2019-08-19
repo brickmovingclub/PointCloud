@@ -2,10 +2,11 @@
 
 #include "CVector.h"
 #include "CLine.h"
+#include "CFace.h"
 
 #include "Common.h"
 
-#include "CFace.h"
+
 
 #include "KNearWidget.h"
 
@@ -162,6 +163,7 @@ void PointCloud::poisson_reconstruct()
 
 pcl::PointCloud<pcl::PointNormal>::Ptr PointCloud::getPointNormal()
 {
+	
 	//Normal estimation
 	pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal>n;
 	pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
@@ -177,6 +179,8 @@ pcl::PointCloud<pcl::PointNormal>::Ptr PointCloud::getPointNormal()
 	pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>);
 	pcl::concatenateFields(*_cloud, *normals, *cloud_with_normals);
 	return cloud_with_normals;
+
+	
 }
 
 
@@ -366,7 +370,8 @@ void PointCloud::DrawBoundingBox()
 
 void PointCloud::Triangulation()
 {
-	std::list<CFace> ST;					//	三角网格
+	
+	std::vector<CFace> ST;					//	三角网格
 	//std::vector<CLine> ActiveE; //活动边
 	CLine CurrentE; // 当前活动边
 	std::vector<CLine> InnerE; //固定边
@@ -454,9 +459,9 @@ void PointCloud::Triangulation()
 	ui.qvtkWidget->update();
 
 
-	/*
+	
 
-*/
+
 	
 	
 }

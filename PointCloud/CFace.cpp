@@ -4,6 +4,15 @@
 
 CFace::CFace(const pcl::PointXYZ &point1, const pcl::PointXYZ &point2, const pcl::PointXYZ &point3)
 {
+	_point1._x = point1.x;	_point1._y = point1.y;	_point1._z = point1.z;
+
+	_point2._x = point2.x;	_point2._y = point2.y;	_point2._z = point2.z;
+	_point3._x = point3.x;	_point3._y = point3.y;	_point3._z = point3.z;
+
+	
+}
+CFace::CFace(const Point &point1, const Point &point2, const Point &point3)
+{
 	_point1 = point1;
 	_point2 = point2;
 	_point3 = point3;
