@@ -1,7 +1,10 @@
 #include "stdafx.h"
+
 #include "CLine.h"
 
 #include "CVector.h"
+
+#include "CFace.h"
 
 #include "Common.h"
 
@@ -447,7 +450,8 @@ void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visuali
 }
 
 
-std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<bool> flag,std::vector<CLine> ActiveE, CLine CurrentE)
+//选择候选点集
+std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::map<Point, bool> flag, std::vector<CLine> ActiveE, CLine CurrentE)
 {
 	//得到三边边长，判断三角形类型
 	CLine l;
@@ -492,8 +496,12 @@ std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr
 	int size = near_pm.size();
 	for (int i = 0; i < size; i++)
 	{
+		Point p;
+		p._x = _cloud->points[near_pm[i]].x;
+		p._y = _cloud->points[near_pm[i]].y;
+		p._z = _cloud->points[near_pm[i]].z;
 		//删除固定点与排除点
-		if (flag[near_pm[i]])
+		if (flag.count(p) > 0 && flag[p])
 			near_pm.erase(near_pm.begin() + i);
 	}
 	if(near_pm.empty()) //边pi-pj是边界边
@@ -565,6 +573,7 @@ std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr
 	return near_pm; //若为空，则pi-pj是边界边
 }
 
+<<<<<<< HEAD
 void  Common::GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &p3, CVector &vector)
 {
 	CVector v1(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
@@ -575,4 +584,409 @@ void  Common::GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &p3,
 	float nb = (v2.GetZ()- v1.GetZ())*(v3.GetX() - v1.GetX()) - (v2.GetX() - v1.GetX())*(v3.GetZ()- v1.GetZ());
 	float nc = (v2.GetX() - v1.GetX())*(v3.GetY() - v1.GetY()) - (v2.GetY() - v1.GetY())*(v3.GetX() - v1.GetX());
 	vector.SetVector(na, nb, nc);
+=======
+
+//选择最佳点
+Point Common::FindBestPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<int> near_pm, CLine CurrentE, std::list<CFace> ST, std::vector<CLine> InnerE, std::map<Point, bool> flag)
+{
+	// TODO: 在此处添加实现代码.
+	CVector vec; //当前活动边所在三角形的法向量
+	vec = vec.GetNormal(pi, pj, pk);
+	const float PI = 3.1415926;
+	float angle_min, angle_max; //候选三角形的角度的最大值与最小值
+	CLine l;
+	float a = l.LineLength_Point(pi, pj);
+	float b = l.LineLength_Point(pj, pk);
+	float c = l.LineLength_Point(pk, pi);
+	float maxSide = max(a, b);
+	maxSide = max(maxSide, c);
+	if (a == maxSide)
+		angle_max = acos((pow(b, 2) + pow(c, 2) - pow(a, 2)) / (2 * b * c)) * 180 / PI;
+	else if (b == maxSide)
+		angle_max = acos((pow(a, 2) + pow(c, 2) - pow(b, 2)) / (2 * a * c)) * 180 / PI;
+	else
+		angle_max = acos((pow(b, 2) + pow(a, 2) - pow(c, 2)) / (2 * b * a)) * 180 / PI;
+	float minSide = min(a, b);
+	minSide = min(minSide, c);
+	if (a == minSide)
+		angle_min = acos((pow(b, 2) + pow(c, 2) - pow(a, 2)) / (2 * b * c)) * 180 / PI;
+	else if (b == minSide)
+		angle_min = acos((pow(a, 2) + pow(c, 2) - pow(b, 2)) / (2 * a * c)) * 180 / PI;
+	else
+		angle_min = acos((pow(b, 2) + pow(a, 2) - pow(c, 2)) / (2 * b * a)) * 180 / PI;
+
+	std::map<float, int> joinCosts;//添加的代价
+	float angle_cur;//当前备选三角片的最大内角,大边对大角
+	//为候选点添加代价
+	for (auto it = near_pm.begin(); it != near_pm.end(); it++)
+	{
+		Point candidateP;
+		candidateP._x = _cloud->points[*it].x;
+		candidateP._y = _cloud->points[*it].y;
+		candidateP._z = _cloud->points[*it].z;
+		float joinCost; //节点candidateP的代价
+		float cost_angle1, cost_angle2;
+		//候选三角形的法向量
+		CVector newVec = vec.GetNormal(pi, candidateP, pj);
+		float angle_cos; 
+		angle_cos = vec.vectorInnerProduct(vec, newVec) / (vec.vectorMag(vec) * vec.vectorMag(newVec));
+		cost_angle1 = sqrt(1 - angle_cos * angle_cos);
+
+		a = l.LineLength_Point(pi, candidateP);
+		b = l.LineLength_Point(candidateP, pj);
+		c = l.LineLength_Point(pj, pi);
+		maxSide = max(a, b);
+		maxSide = max(maxSide, c);		
+		if (a == maxSide)
+			angle_cur = acos((pow(b, 2) + pow(c, 2) - pow(a, 2)) / (2 * b * c)) * 180 / PI;
+		else if (b == maxSide)
+			angle_cur = acos((pow(a, 2) + pow(c, 2) - pow(b, 2)) / (2 * a * c)) * 180 / PI;
+		else
+			angle_cur = acos((pow(b, 2) + pow(a, 2) - pow(c, 2)) / (2 * b * a)) * 180 / PI;
+		
+		cost_angle2 = abs((angle_cur - angle_min) / (angle_max - angle_min));
+		joinCost = cost_angle1 + cost_angle2;
+		joinCosts.insert(pair<float, int>(joinCost, *it));
+	}
+	
+	//候选三角片质量检测
+	Point bestP;
+	for (auto it = joinCosts.begin(); it != joinCosts.end(); it++)
+	{
+		Point pc;
+		pc._x = _cloud->points[it->second].x;
+		pc._y = _cloud->points[it->second].y;
+		pc._z = _cloud->points[it->second].z;	
+
+		//检测非流行点
+		CFace curFace(pi, pj, pc);
+		if (findNearFace_Point(curFace, pc, ST))
+			continue;
+
+		//检测非流行边
+		CLine p_ic(pi, pc);
+		vector<CLine>::iterator its = find(InnerE.begin(), InnerE.end(), p_ic);
+		if (its != InnerE.end())
+			continue;
+		CLine p_cj(pc, pj);
+		its = find(InnerE.begin(), InnerE.end(), p_cj);
+		if (its != InnerE.end())
+			continue;
+
+		//检测自交三角形
+		if (IntersectTriangle(pi, pj, pc, ST))
+			continue;
+		else
+		{
+			bestP = pc;
+			break;
+		}			
+	}
+
+	//检测是否有冗余点
+	CVector vec_new;
+	vec_new = vec_new.GetNormal(pi, pj, bestP);
+	a = vec_new.GetX();
+	b = vec_new.GetY();
+	c = vec_new.GetZ();
+	float d = -a * pi._x - b * pi._y - c * pi._z;
+
+	for (auto it = near_pm.begin(); it != near_pm.end(); it++)
+	{
+		if ((_cloud->points[*it].x == bestP._x) 
+		&& (_cloud->points[*it].y == bestP._y)
+		&& (_cloud->points[*it].z == bestP._z))
+			continue;
+		Point  spatialpoint;;
+		spatialpoint._x = _cloud->points[*it].x;
+		spatialpoint._y = _cloud->points[*it].y;
+		spatialpoint._z = _cloud->points[*it].z;
+		Point subpoint; //投影点
+		subpoint._x = ((b * b + c * c) * spatialpoint._x - a * (b * spatialpoint._y + c * spatialpoint._z + d)) / (a * a + b * b + c * c);
+		subpoint._y = b / a * (subpoint._x - spatialpoint._x) + spatialpoint._y;
+		subpoint._z = c / a * (subpoint._x - spatialpoint._x) + spatialpoint._z;
+
+		//判断投影点是否在三角形内
+		if (TriangleIncludeSubpoint(pi, pj, bestP, subpoint))
+			flag[spatialpoint] = true; //当前点设置为自由点/排除点
+	}
+	CFace f(pi, pj, bestP);
+	ST.push_back(f); //添加三角面片
+	return bestP;
+}
+
+
+// 寻找点的邻接三角形,并判断是否共边
+bool Common::findNearFace_Point(CFace curFace, Point pc, std::list<CFace> ST)
+{
+	// TODO: 在此处添加实现代码.
+	std::set<Point> points;
+	points.insert(curFace.GetPoint1());
+	points.insert(curFace.GetPoint2());
+	points.insert(curFace.GetPoint3());
+
+	for (auto it = ST.begin(); it != ST.end(); it++)
+	{
+		//是点pc的邻接三角形		
+		if (((it->GetPoint1()._x == pc._x) && (it->GetPoint1()._y == pc._y) && (it->GetPoint1()._z == pc._z)) 
+			|| ((it->GetPoint2()._x == pc._x) && (it->GetPoint2()._y == pc._y) && (it->GetPoint2()._z == pc._z))
+			|| ((it->GetPoint3()._x == pc._x) && (it->GetPoint3()._y == pc._y) && (it->GetPoint3()._z == pc._z)))
+		{
+			points.insert(it->GetPoint1());
+			points.insert(it->GetPoint2());
+			points.insert(it->GetPoint3());
+			if (points.size() <= 4)
+				return false;
+		}			
+	}
+	return true;
+}
+
+
+// 三角形pi_pj_pc与pi_pj构成的边的邻接三角形，这两个三角形是否相交
+bool Common::IntersectTriangle(Point pi, Point pj, Point pc, std::list<CFace> ST)
+{
+	// TODO: 在此处添加实现代码.
+	for (auto it = ST.begin(); it != ST.end(); it++)
+	{
+		if ((it->GetPoint1()._x == pi._x) && (it->GetPoint1()._y == pi._y) && (it->GetPoint1()._z == pi._z))
+		{
+			if ((it->GetPoint2()._x == pj._x) && (it->GetPoint2()._y == pj._y) && (it->GetPoint2()._z == pj._z))
+			{
+				Point pk = it->GetPoint3();
+				if (IntersectionLine(pi, pc, pj, pk) 
+				 || IntersectionLine(pj, pc, pi, pk))
+					return true;
+			}
+			else if ((it->GetPoint3()._x == pj._x) && (it->GetPoint3()._y == pj._y) && (it->GetPoint3()._z == pj._z))
+			{
+				Point pk = it->GetPoint2();
+				if (IntersectionLine(pi, pc, pj, pk)
+					|| IntersectionLine(pj, pc, pi, pk))
+					return true;
+			}
+		}
+		else if ((it->GetPoint2()._x == pi._x) && (it->GetPoint2()._y == pi._y) && (it->GetPoint2()._z == pi._z))
+		{
+			if ((it->GetPoint1()._x == pj._x) && (it->GetPoint1()._y == pj._y) && (it->GetPoint1()._z == pj._z))
+			{
+				Point pk = it->GetPoint3();
+				if (IntersectionLine(pi, pc, pj, pk)
+					|| IntersectionLine(pj, pc, pi, pk))
+					return true;
+			}
+			else if ((it->GetPoint3()._x == pj._x) && (it->GetPoint3()._y == pj._y) && (it->GetPoint3()._z == pj._z))
+			{
+				Point pk = it->GetPoint1();
+				if (IntersectionLine(pi, pc, pj, pk)
+					|| IntersectionLine(pj, pc, pi, pk))
+					return true;
+			}
+		}
+		else if ((it->GetPoint3()._x == pi._x) && (it->GetPoint3()._y == pi._y) && (it->GetPoint3()._z == pi._z))
+		{
+			if ((it->GetPoint2()._x == pj._x) && (it->GetPoint2()._y == pj._y) && (it->GetPoint2()._z == pj._z))
+			{
+				Point pk = it->GetPoint1();
+				if (IntersectionLine(pi, pc, pj, pk)
+					|| IntersectionLine(pj, pc, pi, pk))
+					return true;
+			}
+			else if ((it->GetPoint1()._x == pj._x) && (it->GetPoint1()._y == pj._y) && (it->GetPoint1()._z == pj._z))
+			{
+				Point pk = it->GetPoint2();
+				if (IntersectionLine(pi, pc, pj, pk)
+					|| IntersectionLine(pj, pc, pi, pk))
+					return true;
+			}
+		}
+	}
+	return false;
+}
+
+
+// 判断两条线段是否相交
+bool Common::IntersectionLine(Point pi, Point pj, Point pc, Point pk)
+{
+	// TODO: 在此处添加实现代码.
+	CVector p_ic(pc._x - pi._x, pc._y - pi._y, pc._z - pi._z);
+	CVector p_ik(pk._x - pi._x, pk._y - pi._y, pk._z - pi._z);
+	CVector p_jc(pc._x - pj._x, pc._y - pj._y, pc._z - pj._z);
+	CVector p_jk(pk._x - pj._x, pk._y - pj._y, pk._z - pj._z);
+
+	CVector p_ci(pi._x - pc._x, pi._y - pc._y, pi._z - pc._z);
+	CVector p_ki(pi._x - pk._x, pi._y - pk._y, pi._z - pk._z);
+	CVector p_cj(pj._x - pc._x, pj._y - pc._y, pj._z - pc._z);
+	CVector p_kj(pj._x - pk._x, pj._y - pk._y, pj._z - pk._z);
+
+	float sin_value = p_ic.MultiplicationCross(p_ik) * p_jc.MultiplicationCross(p_jk);
+	float sin_value1 = p_ci.MultiplicationCross(p_cj) * p_ki.MultiplicationCross(p_kj);
+	if (sin_value > 0 && sin_value1 > 0)
+		return true;
+	return false;
+}
+
+
+// 判断前面三个点构成的三角形是否包含第四个点
+bool Common::TriangleIncludeSubpoint(Point pi, Point pj, Point bestP, Point subpoint)
+{
+	// TODO: 在此处添加实现代码.
+	float area = TriangleArea(pi, pj, bestP);
+	float area_new = TriangleArea(pi, pj, subpoint) + TriangleArea(pi, bestP, subpoint) + TriangleArea(pj, bestP, subpoint);
+	if (area_new > area)
+		return false;
+	else
+		return true;
+}
+
+
+// 得到三角形ABC的面积
+float Common::TriangleArea(Point A, Point B, Point C)
+{
+	// TODO: 在此处添加实现代码.
+	float s = ((B._y - A._y) * (C._z - A._z) + (B._z - A._z) * (C._x - A._x) + (B._x - A._x) * (C._y - A._y)) -
+		((C._y - A._y) * (B._z - A._z) + (C._z - A._z) * (B._x - A._x) + (C._x - A._x) * (B._y - A._y));
+	return 0.5 * s;
+}
+
+
+// 更新活动链表
+void Common::UpdateActiveList(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> InnerE, std::vector<Point> FreeP, std::vector<Point> ActiveP, std::map<Point, bool> flag)
+{
+	// 判断最佳点添加的位置
+	int type = BestPositionType(ActiveE, CurrentE, bestP, FreeP);
+	switch (type)
+	{
+	case 0:
+		UpdateMode(ActiveE, CurrentE, bestP, InnerE, FreeP, ActiveP); 
+		break;
+	case 1:
+		UpdateMode1(ActiveE, CurrentE, bestP, InnerE, ActiveP, flag);
+		break;
+	case 2:
+		UpdateMode2(ActiveE, CurrentE, bestP, InnerE, ActiveP, flag);
+		break;
+	case 3:
+		UpdateMode3(ActiveE, CurrentE, bestP, InnerE, FreeP, ActiveP, flag);
+		break;
+	default:
+		break;
+	}
+}
+
+
+// 判断最佳点添加的位置类型
+/*
+0 -- 最佳点是自由点
+1 -- 最佳点位于活动边上且为当前活动边前相邻边的端点
+2 -- 最佳点位于活动边上且为当前活动边后相邻边的端点
+3 -- 最佳点位于活动边上且与当前活动边没有相邻关系
+*/
+int Common::BestPositionType(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<Point> FreeP)
+{
+	// TODO: 在此处添加实现代码.
+	std::vector<Point>::iterator it = find(FreeP.begin(), FreeP.end(), bestP);
+	if (it != FreeP.end()) //最佳点是自由点
+		return 0;
+	std::vector<CLine>::iterator its = find(ActiveE.begin(), ActiveE.end(), CurrentE);
+	std::vector<CLine>::iterator front;
+	std::vector<CLine>::iterator behind;
+	if (its == ActiveE.begin())
+	{
+		front = ActiveE.end();
+		behind = its++;
+	}
+	else if (its == ActiveE.end())
+	{
+		front = its--;
+		behind = ActiveE.begin();
+	}
+	else
+	{
+		front = its--;
+		behind = its++;
+	}
+	if ((front->getPointStart()._x == bestP._x)
+		&& (front->getPointStart()._y == bestP._y)
+		&& (front->getPointStart()._z == bestP._z))
+		return 1;
+	if ((behind->getPointEnd()._x == bestP._x)
+		&& (behind->getPointEnd()._y == bestP._y)
+		&& (behind->getPointEnd()._z == bestP._z))
+		return 2;
+	return 3;
+}
+
+
+/*************************更新活动链表*************************************/
+// 最佳点是自由点
+void Common::UpdateMode(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> InnerE, std::vector<Point> FreeP, std::vector<Point> ActiveP)
+{
+	// TODO: 在此处添加实现代码.
+	InnerE.push_back(CurrentE);
+	std::vector<Point>::iterator its = find(FreeP.begin(), FreeP.end(), bestP);
+	FreeP.erase(its);
+	ActiveP.push_back(bestP);
+
+	std::vector<CLine>::iterator it = find(ActiveE.begin(), ActiveE.end(), CurrentE);
+	CLine line1(CurrentE.getPointStart(), bestP);
+	CLine line2(bestP, CurrentE.getPointEnd());
+	ActiveE.insert(it, line1);
+	ActiveE.insert(it, line2);
+	ActiveE.erase(it);	
+}
+
+
+// 最佳点位于活动边上且为当前活动边前相邻边的端点
+void Common::UpdateMode1(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> InnerE, std::vector<Point> ActiveP, std::map<Point, bool> flag)
+{
+	// TODO: 在此处添加实现代码.
+	std::vector<CLine>::iterator it = find(ActiveE.begin(), ActiveE.end(), CurrentE);
+	InnerE.push_back(*it);
+	if (it == ActiveE.begin())
+	{
+		InnerE.push_back(*ActiveE.end());
+		ActiveE.erase(ActiveE.end());
+	}
+
+	std::vector<Point>::iterator its = find(ActiveP.begin(), ActiveP.end(), CurrentE.getPointStart());
+	ActiveP.erase(its);
+
+	CLine line(bestP, CurrentE.getPointEnd());
+	ActiveE.insert(it, line);
+	ActiveE.erase(it);
+	
+	flag[CurrentE.getPointStart()] = true;
+}
+
+
+// 最佳点位于活动边上且为当前活动边后相邻边的端点
+void Common::UpdateMode2(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> InnerE, std::vector<Point> ActiveP, std::map<Point, bool> flag)
+{
+	// TODO: 在此处添加实现代码.
+	std::vector<CLine>::iterator it = find(ActiveE.begin(), ActiveE.end(), CurrentE);
+	InnerE.push_back(*it);
+	if (it == ActiveE.end())
+	{
+		InnerE.push_back(*ActiveE.begin());
+		ActiveE.erase(ActiveE.begin());
+	}
+
+	std::vector<Point>::iterator its = find(ActiveP.begin(), ActiveP.end(), CurrentE.getPointEnd());
+	ActiveP.erase(its);
+
+	CLine line(CurrentE.getPointStart(), bestP);
+	ActiveE.insert(it, line);
+	ActiveE.erase(it);
+
+	flag[CurrentE.getPointEnd()] = true;
+}
+
+
+//最佳点位于活动边上且与当前活动边没有相邻关系
+void Common::UpdateMode3(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> InnerE, std::vector<Point> FreeP, std::vector<Point> ActiveP, std::map<Point, bool> flag)
+{
+	// TODO: 在此处添加实现代码.
+
+>>>>>>> origin/dev_hhy
 }

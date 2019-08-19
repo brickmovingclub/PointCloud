@@ -23,7 +23,7 @@ private:
 
 public:
 	const float Resolution = 5.0f;
-	std::vector<bool> flag; //标记点是否为排除点与固定点
+	std::map<Point, bool> flag; //标记点是否为排除点与固定点
 
 private slots:
 	void OnReadFile();										//	读pcd文件槽函数
