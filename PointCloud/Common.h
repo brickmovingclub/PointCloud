@@ -11,10 +11,6 @@ public:
 	static bool OnTheSameSide(const CVector &normal,const pcl::PointXYZ &origin,const std::vector<std::pair<double, pcl::PointXYZ>> &nearPoints);
 	//static bool OnTheSameSide(const pcl::PointXYZ &pi, const pcl::PointXYZ &pj, const pcl::PointXYZ &pk, const std::vector<std::pair<double,Point>> &nearPoints);
 
-	//	领域中的点在三角面片同侧
-	static bool OnTheSameSide(const CVector &normal,const Point &origin,const std::list<Point> &nearPoints);
-//>>>>>>> origin/dev_hhy
-
 	//	浮点数的大小比较
 	#ifndef ABS
 	#define ABS(x) ((x)<0?-(x):(x))//如果x小于0，返回-x，否则返回x
@@ -46,8 +42,11 @@ public:
 
 
 	//	pcl 绘制线条
-	static void PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer);
+	static void PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::list<CLine> &activeList);
 //>>>>>>> origin/dev_hhy
 	std::vector<int> findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<bool> flag,std::vector<CLine> ActiveE, CLine CurrentE);
+
+	static void  GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &p3, CVector &vector);
+
 };
 

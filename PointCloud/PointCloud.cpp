@@ -362,8 +362,14 @@ void PointCloud::DrawBoundingBox()
 
 void PointCloud::Triangulation()
 {
+	std::list<CFace> ST;					//	三角网格
+	//std::vector<CLine> ActiveE; //活动边
+	CLine CurrentE; // 当前活动边
+	std::vector<CLine> InnerE; //固定边
+	std::vector<Point> FreeP; //自由点
+	std::vector<Point> ActiveP; //活动点
 	std::list<CLine> activeList;			//	活动边表
-	std::list< CFace> ST;					//	三角网格
+
 	int i = 0; int j = 0;
 	
 	int pointsize = _cloud->points.size();
@@ -380,24 +386,16 @@ void PointCloud::Triangulation()
 	{
 		pk = _cloud->points[j++];
 		std::vector<std::pair< double, pcl::PointXYZ>>	nearPoint;	//	领域点集(double：距离， pcl::PointXYZ：领域点)
-		pcl::PointXYZ origin(0, 0, 0);
+		//pcl::PointXYZ origin(0, 0, 0);
 
-		Common::NearRadiusSearch(_cloud, origin, radius * 3, nearPoint);
+		Common::NearRadiusSearch(_cloud, pk, radius , nearPoint);
 		//Common::KNearSearch(_cloud, pk, 3, nearPoint);
 		//Common::VoxelSearch(_cloud, pk, nearPoint);
 
 		std::sort(nearPoint.begin(), nearPoint.end(), [&](const std::pair< double, pcl::PointXYZ> &Pair1, const std::pair< double, pcl::PointXYZ> &Pair2) {return (Pair1.first < Pair2.first ? true : false); });//	按领域点到当前点的距离从小到大排序
 
 		std::vector<std::pair< double, pcl::PointXYZ>>	nearPointBack;	//	不包括pi,pj,pk的领域点备份
-		for (auto iter : nearPoint)
-		{
-			if ((iter.second.x == pi.x && iter.second.y == pi.y && iter.second.z == pi.z) ||
-				(iter.second.x == pj.x && iter.second.y == pj.y && iter.second.z == pj.z) ||
-				(iter.second.x == pk.x && iter.second.y == pk.y && iter.second.z == pk.z))
-				continue;
-			else
-				nearPointBack.push_back(iter);
-		}
+		
 
 		bool bfind = false;				//	是否找到种子三角形
 		while ((i + 1) < nearPoint.size())
@@ -405,22 +403,37 @@ void PointCloud::Triangulation()
 			pi = nearPoint.at(i).second; 
 			pj = nearPoint.at(i + 1).second; 
 
-			
+			nearPointBack.clear();
+			for (auto iter : nearPoint)
+			{
+				if ((iter.second.x == pi.x && iter.second.y == pi.y && iter.second.z == pi.z) ||
+					(iter.second.x == pj.x && iter.second.y == pj.y && iter.second.z == pj.z) ||
+					(iter.second.x == pk.x && iter.second.y == pk.y && iter.second.z == pk.z))
+					continue;
+				else
+					nearPointBack.push_back(iter);
+			}
 
 			if (!Common::Condition_a_b(pi, pj, pk, nearPointBack))	//	检测选取得三点是否在同一直线上或经过三点得圆内不包含领域中的其它点
 			{
 				float dx, dy, dz;
 				CVector vector;
-				if (Common::CalNormalVector(pi.x, pi.y, pi.z, pj.x, pj.y, pj.z, pk.x, pk.y, pk.z, dx, dy, dz))//	计算三角平面的法向量
+				//Common::GetNormal(pi, pj, pk, vector);
+				Common::CalNormalVector(pi.x, pi.y, pi.z, pj.x, pj.y, pj.z, pk.x, pk.y, pk.z, dx, dy, dz);
+				vector.SetVector(dx, dy, dz);
+				float temp = vector.GetX();
+				//vector.SetVector(dx, dy, dz);
+				if (Common::OnTheSameSide(vector, pk, nearPointBack))
 				{
-					vector.SetVector(dx, dy, dz);
-					if (Common::OnTheSameSide(vector, pk, nearPointBack))
-					{
-						//	程序走到此步表示当前选取的领域点 pi,pj 可以作为种子三角形的另外两个点
-						bfind = true;
-						break;
-					}
+					//	程序走到此步表示当前选取的领域点 pi,pj 可以作为种子三角形的另外两个点
+					CLine lineij(pi, pj), linejk(pj, pk), lineki(pk, pi);
+					activeList.push_back(lineij);	//	插入种子三角形的活动bian
+					activeList.push_back(linejk);
+					activeList.push_back(lineki);
+					bfind = true;
+					break;
 				}
+				
 			}
 			i += 2;
 		}
@@ -429,18 +442,16 @@ void PointCloud::Triangulation()
 
 	} while (j < _cloud->points.size());
 	
-	CLine lineij(pi, pj), linejk(pj, pk), lineki(pk, pi);
-	activeList.push_back(lineij);	//	插入种子三角形的活动bian
-	activeList.push_back(linejk);
-	activeList.push_back(lineki);
 	
+	
+
+	Common::PCLDrawLine(_cloud, _viewer, activeList);
+
+	ui.qvtkWidget->update();
+
+
 	/*
-	std::list<CFace> ST;					//	三角网格
-	std::vector<CLine> ActiveE; //活动边
-	CLine CurrentE; // 当前活动边
-	std::vector<CLine> InnerE; //固定边
-	std::vector<Point> FreeP; //自由点
-	std::vector<Point> ActiveP; //活动点
+
 */
 	
 	

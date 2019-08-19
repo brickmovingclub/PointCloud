@@ -64,3 +64,12 @@ Point CLine::getPointEnd()
 	// TODO: 在此处添加实现代码.
 	return Point(_pointEnd.x, _pointEnd.y, _pointEnd.z);
 }
+
+pcl::PointXYZ CLine::GetPCLPointStart()
+{
+	return _pointStart;
+}
+pcl::PointXYZ CLine::GetPCLPointEnd()
+{
+	return _pointEnd;
+}

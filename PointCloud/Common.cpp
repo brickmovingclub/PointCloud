@@ -20,7 +20,7 @@ Common::~Common()
 //	领域中的点在三角面片同侧
 bool Common::OnTheSameSide(const CVector &normal, const pcl::PointXYZ &origin, const std::vector<std::pair<double, pcl::PointXYZ>> &nearPoints)
 {
-	int i = 0;
+	int i = 0,j = 0;
 	double temp = 0.0f;
 	vtkSmartPointer<vtkPlane> plane = vtkSmartPointer<vtkPlane>::New();
 	plane->SetOrigin(origin.x, origin.y, origin.z);
@@ -33,8 +33,13 @@ bool Common::OnTheSameSide(const CVector &normal, const pcl::PointXYZ &origin, c
 			i++;
 		else if ((temp - 0.0f) < 0)
 			i--;
+		else
+		{
+			j++;
+			std::cout << 123 << std::endl;
+		}
 	}
-	return (i == nearPoints.size() ? true : false);
+	return (((i +j ) == nearPoints.size())? true : false);
 }
 /*
 bool Common::OnTheSameSide(const pcl::PointXYZ &pi, const pcl::PointXYZ &pj, const pcl::PointXYZ &pk, const std::vector<std::pair<double, Point>> &nearPoints)
@@ -414,20 +419,31 @@ void Common::VoxelSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const pcl::P
 	}
 }
 
-void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer)
+void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::list<CLine> &activeList)
 {
 	//cloud = getpoint();//实时获取点云
 	pcl::PointXYZ  minPt, maxPt;
 	//viewer->removeAllShapes();
 	pcl::getMinMax3D(*cloud, minPt, maxPt);
 
-	pcl::PointXYZ origin(0, 0, 0);
+	//pcl::PointXYZ origin(0, 0, 0);
 
-	viewer->setBackgroundColor(125, 125, 125); //背景色
+	//viewer->setBackgroundColor(125, 125, 125); //背景色
+	//pcl::ModelCoefficients plane;
+	int i = 0;
+	QString name;
+	string temp;
+	for (auto iter : activeList)
+	{
+		name = QString("line") + QString::number(i++);
+		temp = name.toStdString();
+		//viewer->addLine<pcl::PointXYZ>(minPt, maxPt, 255, 0, 0); //红色线段,线的名字叫做"line1
+		viewer->addLine<pcl::PointXYZ>(iter.GetPCLPointStart(), iter.GetPCLPointEnd(), 255, 0, 0,temp.c_str()); //红色线段,线的名字叫做"line1
 
-	viewer->addLine<pcl::PointXYZ>(origin, minPt, 255, 0, 0, "line1"); //红色线段,线的名字叫做"line1
+	}
+	//viewer->addPointCloud<pcl::PointXYZ>(cloud, "cloud");
 
-	viewer->spinOnce(100);
+//	viewer->spinOnce(100);
 }
 
 
@@ -547,4 +563,16 @@ std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr
 			near_pm.erase(near_pm.begin() + i);
 	}
 	return near_pm; //若为空，则pi-pj是边界边
+}
+
+void  Common::GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &p3, CVector &vector)
+{
+	CVector v1(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+	CVector v2(p3.x - p2.x, p3.y - p2.y, p3.z - p2.z);
+	CVector v3(p1.x - p3.x, p1.y - p3.y, p1.z - p3.z);
+
+	float na = (v2.GetY() - v1.GetY())*(v3.GetZ() - v1.GetZ()) - (v2.GetZ()- v1.GetZ())*(v3.GetY() - v1.GetY());
+	float nb = (v2.GetZ()- v1.GetZ())*(v3.GetX() - v1.GetX()) - (v2.GetX() - v1.GetX())*(v3.GetZ()- v1.GetZ());
+	float nc = (v2.GetX() - v1.GetX())*(v3.GetY() - v1.GetY()) - (v2.GetY() - v1.GetY())*(v3.GetX() - v1.GetX());
+	vector.SetVector(na, nb, nc);
 }

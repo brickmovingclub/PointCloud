@@ -25,5 +25,7 @@ public:
 	float vectorMag(CVector &a);
 	float vectorInnerProduct(CVector &a, CVector &b);
 	CVector GetNormal(Point &p1, Point &p2, Point &p3);
+	CVector GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &p3);
+
 };
 

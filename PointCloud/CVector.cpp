@@ -88,3 +88,16 @@ CVector CVector::GetNormal(Point &p1, Point &p2, Point &p3)
 
 	return CVector(na, nb, nc);
 }
+
+CVector CVector::GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &p3)
+{
+	CVector v1(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+	CVector v2(p3.x - p2.x, p3.y - p2.y, p3.z - p2.z);
+	CVector v3(p1.x - p3.x, p1.y - p3.y, p1.z - p3.z);
+
+	float na = (v2._y - v1._y)*(v3._z - v1._z) - (v2._z - v1._z)*(v3._y - v1._y);
+	float nb = (v2._z - v1._z)*(v3._x - v1._x) - (v2._x - v1._x)*(v3._z - v1._z);
+	float nc = (v2._x - v1._x)*(v3._y - v1._y) - (v2._y - v1._y)*(v3._x - v1._x);
+
+	return CVector(na, nb, nc);
+}
