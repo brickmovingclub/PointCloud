@@ -41,6 +41,7 @@ void CVector::SetVector(const float &x, const float &y, const float &z)
 	this->_y = y;
 	this->_z = z;
 }
+
 CVector CVector::operator *(const CVector &vector)
 {
 	//(a1,a2,a3)x(b1,b2,b3)=(a2b3-a3b2,a3b1-a1b3,a1b2-a2b1)
@@ -51,6 +52,8 @@ CVector CVector::operator *(const CVector &vector)
 	float  len = (float)sqrt(normalx *normalx + normaly * normaly + normalz * normalz);
 	return CVector(normalx / len, normaly / len, normalz / len);
 }
+
+
 void  CVector::operator =(const CVector &vector)
 {
 	this->_x = vector._x;
@@ -88,4 +91,18 @@ CVector CVector::GetNormal(Point &p1, Point &p2, Point &p3)
 	float nc = (v2._x - v1._x)*(v3._y - v1._y) - (v2._y - v1._y)*(v3._x - v1._x);
 
 	return CVector(na, nb, nc);
+}
+
+
+// 两向量叉乘后的向量的模与向量点乘的比值
+float CVector::MultiplicationCross(const CVector &vector)
+{
+	// TODO: 在此处添加实现代码.
+	float normalx, normaly, normalz;
+	normalx = (this->GetY()*vector.GetZ() - this->GetZ()*vector.GetY());
+	normaly = (this->GetZ()*vector.GetX() - this->GetX() *vector.GetZ());
+	normalz = (this->GetX()*vector.GetY() - this->GetY() *vector.GetX());
+	float len = this->GetX() * vector._x + this->GetY() * vector._y + this->GetZ() * vector._z;
+	float len1 = (float)sqrt(normalx *normalx + normaly * normaly + normalz * normalz);
+	return len1 / len;
 }

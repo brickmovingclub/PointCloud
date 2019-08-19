@@ -53,7 +53,11 @@ void PointCloud::OnReadFile()
 	//标记所有的点均为自由点（非排除点与固定点）
 	for (auto it = _cloud->begin(); it != _cloud->end(); it++)
 	{
-		flag.push_back(false);
+		Point p;
+		p._x = it->x;
+		p._y = it->y;
+		p._z = it->z;
+		flag.insert(pair<Point, bool>(p, false));
 	}
 
 	pcl::PCLPointCloud2 cloud_blob;
