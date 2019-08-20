@@ -86,9 +86,25 @@ struct Point
 	~Point()
 	{
 	}
-	bool operator<(const Point &p)
+	bool operator <(const Point &p) const
 	{
 		return (((this->_x < p._x) || ((this->_x == p._x) && (this->_y < p._y )) || ((this->_x == p._x) && (this->_y == p._y) &&(this->_z < p._z))) ?true:false);
+	}
+	//void operator=(const Point &p)const
+	//{
+	//	this->_x = p._x; this->_y = p._y; this->_z = p._z;
+	//}
+	bool  operator == (const Point &p)const
+	{
+		return ((this->_x == p._x && this->_y == p._y && this->_z == p._z) ? true : false);
+	}
+	bool operator !=(const Point &p)const
+	{
+		return ((this->_x == p._x && this->_y == p._y && this->_z == p._z) ? false : true);
+	}
+	bool operator >(const Point &p)const
+	{
+		return !(*this < p);
 	}
 };
 
