@@ -17,7 +17,7 @@ public:
 	pcl::PointXYZ _pointEnd;
 
 	float LineLength(CLine line);
-	float LineLength_Point(Point p1, Point p2);
+	static float LineLength_Point(Point p1, Point p2);
 	pcl::PointXYZ GetPCLPointStart();
 	pcl::PointXYZ GetPCLPointEnd();
 	Point getPointStart();
