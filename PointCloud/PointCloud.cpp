@@ -377,6 +377,7 @@ void PointCloud::Triangulation()
 	std::vector<CLine> InnerE; //固定边
 	std::vector<Point> FreeP; //自由点
 	std::vector<Point> ActiveP; //活动点
+	//std::list<CLine> activeList;			//	活动边表
 
 	int i = 0; int j = 0;
 	
@@ -397,6 +398,8 @@ void PointCloud::Triangulation()
 		//pcl::PointXYZ origin(0, 0, 0);
 
 		Common::NearRadiusSearch(_cloud, pk, radius , nearPoint);
+		//Common::KNearSearch(_cloud, pk, 3, nearPoint);
+		//Common::VoxelSearch(_cloud, pk, nearPoint);
 
 		std::sort(nearPoint.begin(), nearPoint.end(), [&](const std::pair< double, pcl::PointXYZ> &Pair1, const std::pair< double, pcl::PointXYZ> &Pair2) {return (Pair1.first < Pair2.first ? true : false); });//	按领域点到当前点的距离从小到大排序
 
@@ -448,6 +451,8 @@ void PointCloud::Triangulation()
 
 	} while (j < _cloud->points.size());
 	
+	
+	
 
 	Common::PCLDrawLine(_cloud, _viewer, activeList);
 
@@ -467,37 +472,36 @@ void PointCloud::Triangulation()
 	std::vector<CLine>::iterator itercurretntE;		//	指向当前活动边
 	itercurretntE = activeList.begin();
 
-	// 将种子三角形加入到三角网格
-	CFace face(pi, pj, pk);
-	ST.push_back(face);
-
 	do
 	{
-		// 初始化当前边
+		//	 初始化当前边
 		CurrentE = *itercurretntE;
+
+		// 将种子三角形加入到三角网格
+		CFace face(pi, pj, pk);
+		ST.push_back(face);
+
 		Point pointi, pointj, pointk;
 		pointi = CurrentE.getPointStart();
 		pointj = CurrentE.getPointEnd();
 		// 查找精简后选点集
 		std::vector<std::pair< double, pcl::PointXYZ>> result;
- 		Common::findCandidatePoints(_cloud, pointi, pointj, face.GetOtherPoint(pointi, pointj), flag, activeList, CurrentE, result);
+		Common::findCandidatePoints(_cloud, pointi, pointj, face.GetOtherPoint(pointi, pointj), flag, activeList, CurrentE, result);
 		if (result.size() > 0)
 		{
 			// 筛选最佳节点
 			Point bestP;
-			bestP =  Common::FindBestPoint(pointi, pointj, face.GetOtherPoint(pointi, pointj), result, CurrentE, ST, InnerE, flag);
-			if (bestP._x == 0 && bestP._y == 0 && bestP._z == 0)
-				itercurretntE++;
-			else
-			{
-				//	更新活动边表
-				Common::UpdateActiveList(activeList, CurrentE, bestP, InnerE, FreeP, ActiveP, flag, ST);
-				itercurretntE = activeList.begin();
-			}			
+			bestP =  Common::FindBestPoint(_cloud, pointi, pointj, face.GetOtherPoint(pointi, pointj), result, CurrentE, ST, InnerE, flag);
+
+			//	更新活动边表
+
 		}
 		else
+		{
+			//	
 			itercurretntE++;
-	}while(!activeList.empty());
+		}		
+	}while(activeList.size() != 0);
 	
 	
 }
