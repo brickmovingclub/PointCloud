@@ -51,3 +51,14 @@ void  CFace::operator =(const CFace &p)
 	this->_point3._y = p._point3._y;
 	this->_point3._z = p._point3._z;
 }
+
+Point CFace::GetOtherPoint(const Point &p1, const Point &p2)
+{
+	if (_point1 != p1 && _point1 != p2)
+		return _point1;
+	if (_point2 != p1 && _point2 != p2)
+		return _point2;
+	if (_point3 != p1 && _point3 != p2)
+		return _point3;
+	return Point(0, 0, 0);
+}

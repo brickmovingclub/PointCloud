@@ -23,7 +23,7 @@ public:
 	
 	//	求空间平面的法向量
 	static bool CalNormalVector(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3,float &dx, float &dy, float &dz);
-
+	static void CalNormalVector(const Point &p1, const Point &o2, const Point &p3, CVector &vector);
 	//	根据克莱姆法则求解带两个参数的方程
 	static bool GetTwoLineIntersection(float _a1, float _b1, float _c1, float _a2, float _b2, float _c2, float &x, float &y);
 
@@ -42,34 +42,31 @@ public:
 
 
 	//	pcl 绘制线条
-	static void PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::list<CLine> &activeList);
+	static void PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::vector<CLine> &activeList);
 //>>>>>>> origin/dev_hhy
 //<<<<<<< HEAD
-	static std::vector<int> findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<bool> flag,std::vector<CLine> ActiveE, CLine CurrentE);
-
-	static void  GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &p3, CVector &vector);
 
 //=======
 	//选择候选点集
-	std::vector<int> findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::map<Point, bool> flag,std::vector<CLine> ActiveE, CLine CurrentE);
+	static void  findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::map<Point, bool> flag, std::vector<CLine> ActiveE, CLine CurrentE, std::vector<std::pair< double, pcl::PointXYZ>> &result);
 	
 	//选择最佳点
-	Point FindBestPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<int> near_pm, CLine CurrentE, std::list<CFace> ST, std::vector<CLine> InnerE, std::map<Point, bool> flag);
+	static Point FindBestPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<std::pair< double, pcl::PointXYZ>> &result, CLine CurrentE, std::list<CFace> ST, std::vector<CLine> InnerE, std::map<Point, bool> flag);
 	
 	// 寻找点的邻接三角形,并判断是否共边
-	bool findNearFace_Point(CFace curFace, Point pc, std::list<CFace> ST);
+	static bool findNearFace_Point(CFace curFace, Point pc, std::list<CFace> ST);
 	
 	// 判断两个三角形是否相交
-	bool IntersectTriangle(Point pi, Point pj, Point pc, std::list<CFace> ST);
+	static bool IntersectTriangle(Point pi, Point pj, Point pc, std::list<CFace> ST);
 	
 	// 判断两条线段是否相交
-	bool IntersectionLine(Point pi, Point pj, Point pc, Point pk);
+	static bool IntersectionLine(Point pi, Point pj, Point pc, Point pk);
 	
 	// 判断前面三个点构成的三角形是否包含第四个点
-	bool TriangleIncludeSubpoint(Point pi, Point pj, Point bestP, Point subpoint);
+	static bool TriangleIncludeSubpoint(Point pi, Point pj, Point bestP, Point subpoint);
 	
 	// 得到三个点组成的三角形的面积
-	float TriangleArea(Point A, Point B, Point C);
+	static float TriangleArea(Point A, Point B, Point C);
 	
 	// 更新活动链表
 	void UpdateActiveList(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> InnerE, std::vector<Point> FreeP, std::vector<Point> ActiveP, std::map<Point, bool> flag, std::vector<CFace> ST);

@@ -12,6 +12,8 @@ public:
 	Point GetPoint2()const;
 	Point GetPoint3()const;
 
+	Point GetOtherPoint(const Point &p1, const Point &p2);
+
 	void  CFace::operator =(const CFace &p);
 private:
 	Point _point1;

@@ -184,6 +184,19 @@ bool Common::GetTwoLineIntersection(float _a1, float _b1, float _c1, float _a2, 
 //=======
 
 //	求空间平面的法向量
+void Common::CalNormalVector(const Point &p1, const Point &p2, const Point &p3, CVector &vector)
+{
+	CVector a(p2._x - p1._x, p2._y - p1._y, p2._z - p1._z);
+	CVector b(p3._x - p1._x, p3._y - p1._y, p3._z - p1._z);
+
+	float na = a.GetY() * b.GetZ() - a.GetZ() * b.GetY();
+	float nb = a.GetZ() * b.GetX() - a.GetX() * b.GetZ();
+	float nc = a.GetX() * b.GetY() - a.GetY() * b.GetX();
+	//float dx, dy, dz;
+	//bool flag  = CalNormalVector(p1._x,p1._y,p1._z,p2._x,p2._y,p2._z,p3._x,p3._y,p3._z,dx,dy,dz);
+	vector.SetVector(na, nb, nc);
+}
+
 bool Common::CalNormalVector(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3,float &dx, float &dy, float &dz)
 //>>>>>>> origin/dev_hhy
 {
@@ -422,7 +435,7 @@ void Common::VoxelSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const pcl::P
 	}
 }
 
-void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::list<CLine> &activeList)
+void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::vector<CLine> &activeList)
 {
 	//cloud = getpoint();//实时获取点云
 	pcl::PointXYZ  minPt, maxPt;
@@ -451,7 +464,7 @@ void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visuali
 
 
 //选择候选点集
-std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::map<Point, bool> flag, std::vector<CLine> ActiveE, CLine CurrentE)
+void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::map<Point, bool> flag, std::vector<CLine> ActiveE, CLine CurrentE, std::vector<std::pair< double, pcl::PointXYZ>> &result)
 {
 	//得到三边边长，判断三角形类型
 	CLine l;
@@ -483,36 +496,59 @@ std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr
 	else
 		r = (a + b + c) / 3;
 
-	Point pm;
-	pm._x = (pi._x + pj._x) / 2;
-	pm._y = (pi._y + pj._y) / 2;
-	pm._z = (pi._z + pj._z) / 2;
+	pcl::PointXYZ pm;
+	pm.x = (pi._x + pj._x) / 2;
+	pm.y = (pi._y + pj._y) / 2;
+	pm.z = (pi._z + pj._z) / 2;
 
 	//计算点pm的r范围内的领域点集
-	std::vector<int> near_pm; 
-
+	//std::vector<int> near_pm; 
+	
+	Common::NearRadiusSearch(_cloud, pm, r, result);
 
 	//精简领域点集
-	int size = near_pm.size();
+	//int size = near_pm.size();
+	std::cout << "-**************************************" << std::endl;
+	for (auto it = result.begin(); it != result.end();)
+	{
+		std::cout << it->second.x << "  " << it->second.y << "  " << it->second.z << std::endl;
+		//删除固定点与排除点,以及当前活动边上的两个点
+		Point point(it->second.x, it->second.y, it->second.z);
+		if (flag[point] || point == CurrentE.getPointStart() || point == CurrentE.getPointEnd())
+			it = result.erase(it);
+		else
+			++it;
+	}
+	int resultSize = result.size();
+
+	
+	/*
 	for (int i = 0; i < size; i++)
 	{
 		Point p;
 		p._x = _cloud->points[near_pm[i]].x;
 		p._y = _cloud->points[near_pm[i]].y;
 		p._z = _cloud->points[near_pm[i]].z;
-		//删除固定点与排除点
-		if (flag.count(p) > 0 && flag[p])
-			near_pm.erase(near_pm.begin() + i);
-	}
-	if(near_pm.empty()) //边pi-pj是边界边
-		return near_pm;
+		
+	}*/
+	//if (near_pm.empty()) //边pi-pj是边界边
+		;// return near_pm;
 
 	//找到pi,pj相邻的活动点
-	std::vector<CLine>::iterator it = std::find(ActiveE.begin(), ActiveE.end(), CurrentE);
+	int i = 0;
+	for (; i < ActiveE.size();)
+	{
+		if (ActiveE[i] == CurrentE)
+			break;
+	}
+	Point pa = ActiveE[(i - 1 + ActiveE.size() )% ActiveE.size()].getPointStart();
+	Point pb = ActiveE[(i + 1 + ActiveE.size() )% ActiveE.size()].getPointEnd();
+
+	/*std::vector<CLine>::iterator it = std::find(ActiveE.begin(), ActiveE.end(), CurrentE);
 	it--;
 	Point pa = it->getPointStart();
 	it++; it++;
-	Point pb = it->getPointEnd();
+	Point pb = it->getPointEnd();*/
 
 	//边角度约束简化
 	CVector p_ia(pa._x - pi._x, pa._y - pi._y, pa._z - pi._z);
@@ -523,11 +559,34 @@ std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr
 	float angle_ia_ij = p_ia.vectorInnerProduct(p_ia, p_ij) / (p_ia.vectorMag(p_ia) * p_ia.vectorMag(p_ij));
 	float angle_jb_ji = p_jb.vectorInnerProduct(p_jb, p_ji) / (p_jb.vectorMag(p_jb) * p_jb.vectorMag(p_ji));
 	
-	float angleA = max(angle_ia_ij, (float)pow(2, 0.5) / 2);
-	float angleB = max(angle_jb_ji, (float)pow(2, 0.5) / 2);
+	float angleA = max(angle_ia_ij, - (float)pow(2, 0.5) / 2);
+	float angleB = max(angle_jb_ji, - (float)pow(2, 0.5) / 2);
 
 	float angle = 0.0f;
-	size = near_pm.size();
+	float angle1 = 0.0f;
+
+	//std::cout << "_____________" << std::endl;
+	// 
+	int j = 0;
+	for (auto it = result.begin(); it != result.end();)
+	{
+		int resultSize = result.size(); j++;
+		Point candidateP;
+		candidateP._x = it->second.x;
+		candidateP._y = it->second.y;
+		candidateP._z = it->second.z;
+
+		CVector p_icandidateP(candidateP._x - pi._x, candidateP._y - pi._y, candidateP._z - pi._z);
+		CVector p_jcandidateP(candidateP._x - pj._x, candidateP._y - pj._y, candidateP._z - pj._z);
+
+		angle = p_ia.vectorInnerProduct(p_ia, p_icandidateP) / (p_ia.vectorMag(p_ia) * p_ia.vectorMag(p_icandidateP));
+		angle1 = p_jb.vectorInnerProduct(p_jb, p_jcandidateP) / (p_jb.vectorMag(p_jb) * p_jb.vectorMag(p_jcandidateP));
+		if (angle < angleA || angle1 < angleB)
+			it = result.erase(it);
+		else
+			it++;
+	}
+	/*size = near_pm.size();
 	for (int i = 0; i < size; i++)
 	{
 		Point candidateP;
@@ -550,14 +609,29 @@ std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr
 			if (angle < angleB)
 				near_pm.erase(near_pm.begin() + i);
 		}		
-	}
-	if (near_pm.empty()) //边pi-pj是边界边
-		return near_pm;
+	}*/
+	//if (near_pm.empty()) //边pi-pj是边界边
+	//	return near_pm;
 
 	//面角度约束简化
 	CVector vec;
-	vec = vec.GetNormal(pi, pj, pk);
-	size = near_pm.size();
+	Common::CalNormalVector(pi, pj, pk, vec);
+	for (auto iter = result.begin(); iter != result.end();)
+	{
+		Point candidateP;
+		candidateP._x = iter->second.x;
+		candidateP._y = iter->second.y;
+		candidateP._z = iter->second.z;
+
+		CVector newVec;
+		Common::CalNormalVector(pi, candidateP, pj, newVec);
+		angle = vec.vectorInnerProduct(vec, newVec) / (vec.vectorMag(vec) * vec.vectorMag(newVec));
+		if (angle < -pow(3, 0.5) / 2)
+			iter = result.erase(iter);
+		else
+			iter++;
+	}
+	/*size = near_pm.size();
 	for (int i = 0; i < size; i++)
 	{
 		Point candidateP;
@@ -569,30 +643,20 @@ std::vector<int> Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr
 		angle = vec.vectorInnerProduct(vec, newVec) / (vec.vectorMag(vec) * vec.vectorMag(newVec));
 		if (angle < pow(3, 0.5) / 2)
 			near_pm.erase(near_pm.begin() + i);
-	}
-	return near_pm; //若为空，则pi-pj是边界边
+	}*/
+	//return near_pm; //若为空，则pi-pj是边界边
 }
 
-//<<<<<<< HEAD
-void  Common::GetNormal(pcl::PointXYZ &p1, pcl::PointXYZ &p2, pcl::PointXYZ &p3, CVector &vector)
-{
-	CVector v1(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-	CVector v2(p3.x - p2.x, p3.y - p2.y, p3.z - p2.z);
-	CVector v3(p1.x - p3.x, p1.y - p3.y, p1.z - p3.z);
 
-	float na = (v2.GetY() - v1.GetY())*(v3.GetZ() - v1.GetZ()) - (v2.GetZ() - v1.GetZ())*(v3.GetY() - v1.GetY());
-	float nb = (v2.GetZ() - v1.GetZ())*(v3.GetX() - v1.GetX()) - (v2.GetX() - v1.GetX())*(v3.GetZ() - v1.GetZ());
-	float nc = (v2.GetX() - v1.GetX())*(v3.GetY() - v1.GetY()) - (v2.GetY() - v1.GetY())*(v3.GetX() - v1.GetX());
-	vector.SetVector(na, nb, nc);
-}
-//=======
 
 //选择最佳点
-Point Common::FindBestPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<int> near_pm, CLine CurrentE, std::list<CFace> ST, std::vector<CLine> InnerE, std::map<Point, bool> flag)
+Point Common::FindBestPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::vector<std::pair< double, pcl::PointXYZ>> &result, CLine CurrentE, std::list<CFace> ST, std::vector<CLine> InnerE, std::map<Point, bool> flag)
 {
 	// TODO: 在此处添加实现代码.
 	CVector vec; //当前活动边所在三角形的法向量
-	vec = vec.GetNormal(pi, pj, pk);
+	Common::CalNormalVector(pi, pj, pk, vec);
+
+	//vec = vec.GetNormal(pi, pj, pk);
 	const float PI = 3.1415926;
 	float angle_min, angle_max; //候选三角形的角度的最大值与最小值
 	CLine l;
@@ -616,20 +680,25 @@ Point Common::FindBestPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi
 	else
 		angle_min = acos((pow(b, 2) + pow(a, 2) - pow(c, 2)) / (2 * b * a)) * 180 / PI;
 
-	std::map<float, int> joinCosts;//添加的代价
+	std::vector<std::pair<float, Point>> joinCosts;
+	//std::map<float, Point> joinCosts;//添加的代价
 	float angle_cur;//当前备选三角片的最大内角,大边对大角
 	//为候选点添加代价
-	for (auto it = near_pm.begin(); it != near_pm.end(); it++)
+	for (auto it = result.begin(); it != result.end(); it++)
 	{
 		Point candidateP;
-		candidateP._x = _cloud->points[*it].x;
-		candidateP._y = _cloud->points[*it].y;
-		candidateP._z = _cloud->points[*it].z;
+		candidateP._x = it->second.x;
+		candidateP._y = it->second.y;
+		candidateP._z = it->second.z;
 		float joinCost; //节点candidateP的代价
 		float cost_angle1, cost_angle2;
 		//候选三角形的法向量
-		CVector newVec = vec.GetNormal(pi, candidateP, pj);
+		CVector newVec;
+		//CVector newVec = vec.GetNormal(pi, candidateP, pj);
+		CalNormalVector(pi, candidateP, pj, newVec);
 		float angle_cos; 
+		float temp = vec.vectorInnerProduct(vec, newVec);
+		float temp1 = (vec.vectorMag(vec) * vec.vectorMag(newVec));
 		angle_cos = vec.vectorInnerProduct(vec, newVec) / (vec.vectorMag(vec) * vec.vectorMag(newVec));
 		cost_angle1 = sqrt(1 - angle_cos * angle_cos);
 
@@ -647,17 +716,18 @@ Point Common::FindBestPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi
 		
 		cost_angle2 = abs((angle_cur - angle_min) / (angle_max - angle_min));
 		joinCost = cost_angle1 + cost_angle2;
-		joinCosts.insert(pair<float, int>(joinCost, *it));
+		joinCosts.push_back(pair<float, Point>(joinCost, Point(it->second.x,it->second.y,it->second.y)));
 	}
 	
+	std::sort(joinCosts.begin(), joinCosts.end(), [&](const std::pair<float, Point> &pair1, const std::pair<float, Point> &pair2) {return (((pair1.first < pair2.first) ? true : false)); });
 	//候选三角片质量检测
 	Point bestP;
 	for (auto it = joinCosts.begin(); it != joinCosts.end(); it++)
 	{
 		Point pc;
-		pc._x = _cloud->points[it->second].x;
-		pc._y = _cloud->points[it->second].y;
-		pc._z = _cloud->points[it->second].z;	
+		pc._x = it->second._x;
+		pc._y = it->second._y;
+		pc._z = it->second._z;
 
 		//检测非流行点
 		CFace curFace(pi, pj, pc);
@@ -686,22 +756,24 @@ Point Common::FindBestPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi
 
 	//检测是否有冗余点
 	CVector vec_new;
-	vec_new = vec_new.GetNormal(pi, pj, bestP);
+	//vec_new = vec_new.GetNormal(pi, pj, bestP);
+	CalNormalVector(pi, pj, bestP, vec_new);
+
 	a = vec_new.GetX();
 	b = vec_new.GetY();
 	c = vec_new.GetZ();
 	float d = -a * pi._x - b * pi._y - c * pi._z;
 
-	for (auto it = near_pm.begin(); it != near_pm.end(); it++)
+	for (auto it = result.begin(); it != result.end(); it++)
 	{
-		if ((_cloud->points[*it].x == bestP._x) 
-		&& (_cloud->points[*it].y == bestP._y)
-		&& (_cloud->points[*it].z == bestP._z))
+		if ((it->second.x == bestP._x) 
+		&& (it->second.y == bestP._y)
+		&& (it->second.z == bestP._z))
 			continue;
 		Point  spatialpoint;;
-		spatialpoint._x = _cloud->points[*it].x;
-		spatialpoint._y = _cloud->points[*it].y;
-		spatialpoint._z = _cloud->points[*it].z;
+		spatialpoint._x = it->second.x;
+		spatialpoint._y = it->second.y;
+		spatialpoint._z = it->second.z;
 		Point subpoint; //投影点
 		subpoint._x = ((b * b + c * c) * spatialpoint._x - a * (b * spatialpoint._y + c * spatialpoint._z + d)) / (a * a + b * b + c * c);
 		subpoint._y = b / a * (subpoint._x - spatialpoint._x) + spatialpoint._y;

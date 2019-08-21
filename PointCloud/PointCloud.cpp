@@ -371,13 +371,13 @@ void PointCloud::DrawBoundingBox()
 void PointCloud::Triangulation()
 {
 	
-	std::vector<CFace> ST;					//	三角网格
-	//std::vector<CLine> ActiveE; //活动边
+	std::list<CFace> ST;					//	三角网格
+	std::vector<CLine> activeList; //活动边
 	CLine CurrentE; // 当前活动边
 	std::vector<CLine> InnerE; //固定边
 	std::vector<Point> FreeP; //自由点
 	std::vector<Point> ActiveP; //活动点
-	std::list<CLine> activeList;			//	活动边表
+	//std::list<CLine> activeList;			//	活动边表
 
 	int i = 0; int j = 0;
 	
@@ -458,10 +458,50 @@ void PointCloud::Triangulation()
 
 	ui.qvtkWidget->update();
 
-
+	// 更新自由点
+	for (int i = 0; i < _cloud->points.size(); ++i)
+	{
+		FreeP.push_back(Point(_cloud->points[i].x, _cloud->points[i].y, _cloud->points[i].z));
+	}
 	
+	//	更新活动点
+	ActiveP.push_back(Point(pi.x, pi.y, pi.z));
+	ActiveP.push_back(Point(pj.x, pj.y, pj.z));
+	ActiveP.push_back(Point(pk.x, pk.y, pk.z));
 
+	std::vector<CLine>::iterator itercurretntE;		//	指向当前活动边
+	itercurretntE = activeList.begin();
 
+	do
+	{
+		//	 初始化当前边
+		CurrentE = *itercurretntE;
+
+		// 将种子三角形加入到三角网格
+		CFace face(pi, pj, pk);
+		ST.push_back(face);
+
+		Point pointi, pointj, pointk;
+		pointi = CurrentE.getPointStart();
+		pointj = CurrentE.getPointEnd();
+		// 查找精简后选点集
+		std::vector<std::pair< double, pcl::PointXYZ>> result;
+		Common::findCandidatePoints(_cloud, pointi, pointj, face.GetOtherPoint(pointi, pointj), flag, activeList, CurrentE, result);
+		if (result.size() > 0)
+		{
+			// 筛选最佳节点
+			Point bestP;
+			bestP =  Common::FindBestPoint(_cloud, pointi, pointj, face.GetOtherPoint(pointi, pointj), result, CurrentE, ST, InnerE, flag);
+
+			//	更新活动边表
+
+		}
+		else
+		{
+			//	
+			itercurretntE++;
+		}		
+	}while(activeList.size() != 0);
 	
 	
 }
