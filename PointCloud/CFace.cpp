@@ -37,6 +37,20 @@ Point CFace::GetPoint3()const
 	return _point3;
 }
 
+pcl::PointXYZ CFace::GetPCLPoint1()const
+{
+	return pcl::PointXYZ(_point1._x, _point1._y, _point1._z);
+}
+pcl::PointXYZ CFace::GetPCLPoint2()const
+{
+	return pcl::PointXYZ(_point2._x, _point2._y, _point2._z);
+
+}
+pcl::PointXYZ CFace::GetPCLPoint3()const
+{
+	return pcl::PointXYZ(_point3._x, _point3._y, _point3._z);
+}
+
 void  CFace::operator =(const CFace &p)
 {
 	this->_point1._x = p._point1._x;

@@ -11,7 +11,7 @@ CLine::CLine(const pcl::PointXYZ &pointStart, const pcl::PointXYZ &pointEnd)
 CLine::CLine(const Point &pointStart, const Point &pointEnd)
 {
 	_pointStart.x = pointStart._x;	_pointStart.y = pointStart._y;	_pointStart.z = pointStart._z;
-	_pointEnd.x = pointStart._x;	_pointEnd.y = pointStart._y;	_pointEnd.z = pointStart._z;
+	_pointEnd.x = pointEnd._x;	_pointEnd.y = pointEnd._y;	_pointEnd.z = pointEnd._z;
 }
 CLine::CLine()
 {
