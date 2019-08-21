@@ -435,7 +435,7 @@ void Common::VoxelSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const pcl::P
 	}
 }
 
-void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::vector<CLine> &activeList)
+void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::list<CFace> &ST)
 {
 	//cloud = getpoint();//实时获取点云
 	pcl::PointXYZ  minPt, maxPt;
@@ -449,12 +449,18 @@ void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visuali
 	int i = 0;
 	QString name;
 	string temp;
-	for (auto iter : activeList)
+	for (auto iter : ST)
 	{
 		name = QString("line") + QString::number(i++);
 		temp = name.toStdString();
-		//viewer->addLine<pcl::PointXYZ>(minPt, maxPt, 255, 0, 0); //红色线段,线的名字叫做"line1
-		viewer->addLine<pcl::PointXYZ>(iter.GetPCLPointStart(), iter.GetPCLPointEnd(), 255, 0, 0,temp.c_str()); //红色线段,线的名字叫做"line1
+		viewer->addLine<pcl::PointXYZ>(iter.GetPCLPoint1(), iter.GetPCLPoint2(), 255, 0, 0,temp.c_str()); //红色线段,线的名字叫做"line1
+		name = QString("line") + QString::number(i++);
+		temp = name.toStdString();
+		viewer->addLine<pcl::PointXYZ>(iter.GetPCLPoint2(), iter.GetPCLPoint3(), 255, 0, 0, temp.c_str()); //红色线段,线的名字叫做"line1
+		name = QString("line") + QString::number(i++);
+		temp = name.toStdString();
+		viewer->addLine<pcl::PointXYZ>(iter.GetPCLPoint3(), iter.GetPCLPoint1(), 255, 0, 0, temp.c_str()); //红色线段,线的名字叫做"line1
+
 
 	}
 	//viewer->addPointCloud<pcl::PointXYZ>(cloud, "cloud");
@@ -462,6 +468,33 @@ void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visuali
 //	viewer->spinOnce(100);
 }
 
+Point Common::GetOtherPoint(const Point &pointi, const Point &pointj, std::list<CFace> &ST)
+{
+	int i = 0;
+	for (auto iter : ST)
+	{
+		i = 0;
+		if (pointi == iter.GetPoint1() || pointi == iter.GetPoint2() || pointi == iter.GetPoint3())
+			i++;
+		else
+			continue;
+		if (pointj == iter.GetPoint1() || pointj == iter.GetPoint2() || pointj == iter.GetPoint3())
+			i++;
+		else
+			continue;
+		if (i == 2)
+		{
+			if (pointi != iter.GetPoint1() && pointj != iter.GetPoint1())
+				return iter.GetPoint1();
+			else if (pointi != iter.GetPoint2() && pointj != iter.GetPoint2())
+				return iter.GetPoint2();
+			else if (pointi != iter.GetPoint3() && pointj != iter.GetPoint3())
+				return iter.GetPoint3();
+			
+		}
+	}
+	return Point();
+}
 
 //选择候选点集
 void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::map<Point, bool> flag, std::vector<CLine> ActiveE, CLine CurrentE, std::vector<std::pair< double, pcl::PointXYZ>> &result)
@@ -501,6 +534,8 @@ void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Po
 	pm.y = (pi._y + pj._y) / 2;
 	pm.z = (pi._z + pj._z) / 2;
 
+	
+
 	//计算点pm的r范围内的领域点集
 	//std::vector<int> near_pm; 
 	
@@ -527,6 +562,8 @@ void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Po
 	{
 		if (ActiveE[i] == CurrentE)
 			break;
+		else
+			i++;
 	}
 	Point pa = ActiveE[(i - 1 + ActiveE.size() )% ActiveE.size()].getPointStart();
 	Point pb = ActiveE[(i + 1 + ActiveE.size() )% ActiveE.size()].getPointEnd();
@@ -780,11 +817,14 @@ bool Common::IntersectTriangle(Point pi, Point pj, Point pc, std::list<CFace> ST
 
 	for (auto it = lines.begin(); it != lines.end(); it++)
 	{
-		if(IntersectionLine(it->getPointStart(), it->getPointEnd(), pc, pi)
-			|| IntersectionLine(it->getPointStart(), it->getPointEnd(), pc, pj))
+		if (it->getPointStart() == pj || it->getPointEnd() == pj)
+			continue;
+		else
 		{
-			return true;
-		}			
+			if (IntersectionLine(it->getPointStart(), it->getPointEnd(), pc, pi)
+				|| IntersectionLine(it->getPointStart(), it->getPointEnd(), pc, pj))
+				return true;
+		}
 	}
 	return false;
 }
@@ -913,8 +953,9 @@ int Common::BestPositionType(std::vector<CLine> ActiveE, CLine CurrentE, Point b
 	}
 	else
 	{
-		front = its--;
-		behind = its++;
+		front = --its;
+		its++;
+		behind = ++its;
 	}
 	if (front->getPointStart() == bestP)
 		return 1;
@@ -937,9 +978,9 @@ void Common::UpdateMode(std::vector<CLine> &ActiveE, CLine CurrentE, Point bestP
 	std::vector<CLine>::iterator it = find(ActiveE.begin(), ActiveE.end(), CurrentE);
 	CLine line1(CurrentE.getPointStart(), bestP);
 	CLine line2(bestP, CurrentE.getPointEnd());
-	ActiveE.insert(it, line1);
-	ActiveE.insert(it, line2);
-	ActiveE.erase(it);	
+	it = ActiveE.erase(it);
+	it = ActiveE.insert(it, line1);
+	it = ActiveE.insert(it, line2);
 }
 
 
@@ -995,34 +1036,28 @@ void Common::UpdateMode3(std::vector<CLine> &ActiveE, CLine CurrentE, Point best
 	// TODO: 在此处添加实现代码.
 	std::vector<CLine>::iterator it = find(ActiveE.begin(), ActiveE.end(), CurrentE);
 	std::vector<CLine>::iterator its = it;
-	std::vector<CLine>::iterator its_front;
-	if (its == ActiveE.end())
-		its = ActiveE.begin();
-	else
-		its++;
 	int holeSide_count = 1;
 
-	while ((its->getPointEnd()._x != bestP._x)
-		|| (its->getPointEnd()._y != bestP._y)
-		|| (its->getPointEnd()._z != bestP._z))
+	while (its->getPointEnd() != bestP)
 	{
-		InnerE.push_back(*its);
-		holeSide_count++;
-		std::vector<Point>::iterator iter = find(ActiveP.begin(), ActiveP.end(), its->getPointEnd());
-		ActiveP.erase(iter);
-		flag[its->getPointEnd()] = true;
-		if (its == ActiveE.begin())
-			its_front = ActiveE.end();
+		if (its == ActiveE.end())
+			its = ActiveE.begin();
 		else
-			its_front = its--;
+			its++;
+		holeSide_count++;
+		InnerE.push_back(*its);
+		std::vector<Point>::iterator iter = find(ActiveP.begin(), ActiveP.end(), its->getPointEnd());
+		iter = ActiveP.erase(iter);
+		flag[its->getPointEnd()] = true;
 		if (holeSide_count > 1) //可以构造三角形
 		{
-			CFace f(its_front->getPointStart(), its_front->getPointEnd(), its->getPointEnd());
+			CFace f(its->getPointStart(), its->getPointEnd(), CurrentE.getPointEnd());
 			ST.push_back(f);
 		}
 	}
 	CFace ff(its->getPointStart(), bestP, CurrentE.getPointEnd());
 	ST.push_back(ff);
+	flag[CurrentE.getPointEnd()] = true;
 
 	ActiveE.erase(it, its);
 	CLine l(CurrentE.getPointStart(), bestP);

@@ -449,9 +449,8 @@ void PointCloud::Triangulation()
 	} while (j < _cloud->points.size());
 	
 
-	Common::PCLDrawLine(_cloud, _viewer, activeList);
+	//Common::PCLDrawLine(_cloud, _viewer, activeList);
 
-	ui.qvtkWidget->update();
 
 	// 更新自由点
 	for (int i = 0; i < _cloud->points.size(); ++i)
@@ -479,8 +478,9 @@ void PointCloud::Triangulation()
 		pointi = CurrentE.getPointStart();
 		pointj = CurrentE.getPointEnd();
 		// 查找精简后选点集
-		std::vector<std::pair< double, pcl::PointXYZ>> result;
- 		Common::findCandidatePoints(_cloud, pointi, pointj, face.GetOtherPoint(pointi, pointj), flag, activeList, CurrentE, result);
+		std::vector<std::pair< double, pcl::PointXYZ>> result; 
+
+ 		Common::findCandidatePoints(_cloud, pointi, pointj, Common::GetOtherPoint(pointi, pointj,ST), flag, activeList, CurrentE, result);
 		if (result.size() > 0)
 		{
 			// 筛选最佳节点
@@ -492,14 +492,17 @@ void PointCloud::Triangulation()
 			{
 				//	更新活动边表
 				Common::UpdateActiveList(activeList, CurrentE, bestP, InnerE, FreeP, ActiveP, flag, ST);
+				Common::PCLDrawLine(_cloud, _viewer, ST);
+
 				itercurretntE = activeList.begin();
 			}			
 		}
 		else
 			itercurretntE++;
-	}while(!activeList.empty());
+	}while(itercurretntE != activeList.end());
 	
-	
+	ui.qvtkWidget->update();
+
 }
 
 

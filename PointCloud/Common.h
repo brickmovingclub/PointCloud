@@ -42,7 +42,10 @@ public:
 
 
 	//	pcl 绘制线条
-	static void PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::vector<CLine> &activeList);
+	static void PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::list<CFace> &ST);
+
+	//	寻找包含pointi、pointj中的三角面片中的第三个点
+	static Point GetOtherPoint(const Point &pointi, const Point &pointj,std::list<CFace> &ST);
 //>>>>>>> origin/dev_hhy
 //<<<<<<< HEAD
 

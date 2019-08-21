@@ -12,6 +12,10 @@ public:
 	Point GetPoint2()const;
 	Point GetPoint3()const;
 
+	pcl::PointXYZ GetPCLPoint1()const;
+	pcl::PointXYZ GetPCLPoint2()const;
+	pcl::PointXYZ GetPCLPoint3()const;
+
 	Point GetOtherPoint(const Point &p1, const Point &p2);
 
 	void  CFace::operator =(const CFace &p);

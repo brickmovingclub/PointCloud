@@ -12,7 +12,11 @@ public:
 	~CLine();
 	bool CLine::operator ==(const CLine& a)const;
 
-	
+	void operator= (const CLine &line)
+	{
+		this->_pointStart = line._pointStart;
+		this->_pointEnd = line._pointEnd;
+	}
 	pcl::PointXYZ _pointStart;
 	pcl::PointXYZ _pointEnd;
 
