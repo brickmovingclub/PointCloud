@@ -360,10 +360,10 @@ void Common::NearRadiusSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const p
 		for (size_t i = 0; i < pointIdxRadiusSearch.size(); ++i)
 		{
 			nearPoint.push_back(std::make_pair(pointRadiusSquaredDistance[i], cloud->points[pointIdxRadiusSearch[i]]));
-			std::cout << "    " << cloud->points[pointIdxRadiusSearch[i]].x
-			<< " " << cloud->points[pointIdxRadiusSearch[i]].y
-			<< " " << cloud->points[pointIdxRadiusSearch[i]].z
-			<< " (squared distance: " << pointRadiusSquaredDistance[i] << ")" << std::endl;
+			//std::cout << "    " << cloud->points[pointIdxRadiusSearch[i]].x
+			//<< " " << cloud->points[pointIdxRadiusSearch[i]].y
+		//	<< " " << cloud->points[pointIdxRadiusSearch[i]].z
+			//<< " (squared distance: " << pointRadiusSquaredDistance[i] << ")" << std::endl;
 		}
 			
 	}
@@ -556,7 +556,7 @@ void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Po
 	}
 	int resultSize = result.size();
 
-	//找到pi,pj相邻的活动点
+	//找到pi,pj相邻的活动点(可能存在问题，当活动边并没有顺序时，此可算法失效)
 	int i = 0;
 	for (; i < ActiveE.size();)
 	{
@@ -979,8 +979,8 @@ void Common::UpdateMode(std::vector<CLine> &ActiveE, CLine CurrentE, Point bestP
 	CLine line1(CurrentE.getPointStart(), bestP);
 	CLine line2(bestP, CurrentE.getPointEnd());
 	it = ActiveE.erase(it);
-	it = ActiveE.insert(it, line1);
 	it = ActiveE.insert(it, line2);
+	it = ActiveE.insert(it, line1);
 }
 
 
