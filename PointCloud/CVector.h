@@ -23,12 +23,14 @@ private:
 	float _x, _y, _z;
 public:
 	float vectorMag(CVector &a);
-	float vectorInnerProduct(CVector &a, CVector &b);
+	static float vectorInnerProduct(CVector &a, CVector &b);
 //<<<<<<< HEAD
 
 //=======
 	// 两向量叉乘后的向量的模与向量点乘的比值
 	float MultiplicationCross(const CVector &vector);
+	// 两向量叉乘
+	static CVector CVector::Multiplication(const CVector &vector1, const CVector &vector);
 //>>>>>>> origin/dev_hhy
 };
 

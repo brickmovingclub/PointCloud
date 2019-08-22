@@ -39,7 +39,7 @@ bool Common::OnTheSameSide(const CVector &normal, const pcl::PointXYZ &origin, c
 		else
 		{
 			j++;
-			std::cout << 123 << std::endl;
+			//std::cout << 123 << std::endl;
 		}
 	}
 	return (((i +j ) == nearPoints.size())? true : false);
@@ -197,6 +197,37 @@ void Common::CalNormalVector(const Point &p1, const Point &p2, const Point &p3, 
 	vector.SetVector(na, nb, nc);
 }
 
+float Common::Round(const float &src, const int &bits)
+{
+	float f = src;
+	if (bits > 0)
+	{
+		stringstream ss;
+		ss << fixed << setprecision(bits) << f;
+		ss >> f;
+	}
+	return f;
+}
+double Common::CalRadius(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
+{
+	pcl::PointXYZ min;//用于存放三个轴的最小值
+	pcl::PointXYZ max;//用于存放三个轴的最大值
+	float dx, dy, dz;
+	double temp = 1.0f;
+	pcl::getMinMax3D(*cloud, min, max);
+	dx = (max.x - min.x);
+	dy = max.y - min.y;
+	dz = max.z - min.z;
+	if (dx != 0)
+		temp *= dx;
+	if (dy != 0.0f)
+		temp *= dy;
+	if (dz != 0.0f)
+		temp *= dz;
+	temp = (double)(temp / cloud->points.size());
+	return (double)sqrt(temp);	//	搜索半径r
+}
+
 bool Common::CalNormalVector(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3,float &dx, float &dy, float &dz)
 //>>>>>>> origin/dev_hhy
 {
@@ -334,7 +365,7 @@ bool Common::Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk,
 	//>>>>>>> origin/dev_hhy
 }
 
-void Common::NearRadiusSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const pcl::PointXYZ &point, const float &radius, std::vector<std::pair< double,pcl::PointXYZ>> &nearPoint)
+void Common::NearRadiusSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::PointCloud<pcl::RGB>::Ptr &pPointsRGB,const pcl::PointXYZ &point, const float &radius, std::vector<std::pair< double,pcl::PointXYZ>> &nearPoint)
 {
 	//  // Neighbors within radius search
 
@@ -360,6 +391,10 @@ void Common::NearRadiusSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const p
 		for (size_t i = 0; i < pointIdxRadiusSearch.size(); ++i)
 		{
 			nearPoint.push_back(std::make_pair(pointRadiusSquaredDistance[i], cloud->points[pointIdxRadiusSearch[i]]));
+			pPointsRGB->points[pointIdxRadiusSearch[i]].b = 255;		//所有领域点标记为蓝色
+			pPointsRGB->points[pointIdxRadiusSearch[i]].r = 0;
+				
+
 			//std::cout << "    " << cloud->points[pointIdxRadiusSearch[i]].x
 			//<< " " << cloud->points[pointIdxRadiusSearch[i]].y
 		//	<< " " << cloud->points[pointIdxRadiusSearch[i]].z
@@ -434,6 +469,22 @@ void Common::VoxelSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const pcl::P
 			
 	}
 }
+void Common::PCLDrawLine(QString &faceName, pcl::visualization::PCLVisualizer::Ptr viewer, const CFace &face,const QColor &color )
+{
+	int i = 0;
+	string temp;
+	QString name = faceName + QString::number(i++);
+	temp = name.toStdString();
+	viewer->addLine<pcl::PointXYZ>(face.GetPCLPoint1(), face.GetPCLPoint2(), color.red(), color.green(), color.blue(), temp.c_str()); //红色线段,线的名字叫做"line1
+	name = faceName + QString::number(i++);
+	temp = name.toStdString();
+	viewer->addLine<pcl::PointXYZ>(face.GetPCLPoint2(), face.GetPCLPoint3(), color.red(), color.green(), color.blue(), temp.c_str()); //红色线段,线的名字叫做"line1
+	name = faceName + QString::number(i++);
+	temp = name.toStdString();
+	viewer->addLine<pcl::PointXYZ>(face.GetPCLPoint3(), face.GetPCLPoint1(), color.red(), color.green(), color.blue(), temp.c_str()); //红色线段,线的名字叫做"line1
+
+}
+
 
 void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::list<CFace> &ST)
 {
@@ -465,7 +516,7 @@ void Common::PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visuali
 	}
 	//viewer->addPointCloud<pcl::PointXYZ>(cloud, "cloud");
 
-//	viewer->spinOnce(100);
+	viewer->spinOnce(100);
 }
 
 Point Common::GetOtherPoint(const Point &pointi, const Point &pointj, std::list<CFace> &ST)
@@ -496,8 +547,41 @@ Point Common::GetOtherPoint(const Point &pointi, const Point &pointj, std::list<
 	return Point();
 }
 
+// 去除冗余点
+void Common::RemoveRedundantPoints(Point pi, Point pj, Point bestP, std::map<Point, bool> &flag, std::vector<std::pair< double, pcl::PointXYZ>> &result)
+{
+	// TODO: 在此处添加实现代码.
+	//检测是否有冗余点
+	CVector vec_new;
+	CalNormalVector(pi, pj, bestP, vec_new);
+
+	float a = vec_new.GetX();
+	float b = vec_new.GetY();
+	float c = vec_new.GetZ();
+	float d = -a * pi._x - b * pi._y - c * pi._z;
+
+	for (auto it = result.begin(); it != result.end(); it++)
+	{
+		if ((it->second.x == bestP._x)
+			&& (it->second.y == bestP._y)
+			&& (it->second.z == bestP._z))
+			continue;
+		Point  spatialpoint;;
+		spatialpoint._x = it->second.x;
+		spatialpoint._y = it->second.y;
+		spatialpoint._z = it->second.z;
+		Point subpoint; //投影点
+		subpoint._x = ((b * b + c * c) * spatialpoint._x - a * (b * spatialpoint._y + c * spatialpoint._z + d)) / (a * a + b * b + c * c);
+		subpoint._y = b / a * (subpoint._x - spatialpoint._x) + spatialpoint._y;
+		subpoint._z = c / a * (subpoint._x - spatialpoint._x) + spatialpoint._z;
+
+		//判断投影点是否在三角形内
+		if (TriangleIncludeSubpoint(pi, pj, bestP, subpoint))
+			flag[spatialpoint] = true; //当前点设置为自由点/排除点
+	}
+}
 //选择候选点集
-void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::map<Point, bool> flag, std::vector<CLine> ActiveE, CLine CurrentE, std::vector<std::pair< double, pcl::PointXYZ>> &result)
+void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, pcl::PointCloud<pcl::RGB>::Ptr &pPointsRGB, Point pi, Point pj, Point pk, std::map<Point, bool> flag, std::vector<CLine> ActiveE, CLine CurrentE, std::vector<std::pair< double, pcl::PointXYZ>> &result)
 {
 	//得到三边边长，判断三角形类型
 	CLine l;
@@ -539,7 +623,7 @@ void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Po
 	//计算点pm的r范围内的领域点集
 	//std::vector<int> near_pm; 
 	
-	Common::NearRadiusSearch(_cloud, pm, r, result);
+	Common::NearRadiusSearch(_cloud, pPointsRGB, pm, 2 * r , result);
 
 	//精简领域点集
 	//int size = near_pm.size();
@@ -549,7 +633,7 @@ void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Po
 		//std::cout << it->second.x << "  " << it->second.y << "  " << it->second.z << std::endl;
 		//删除固定点与排除点,以及当前活动边上的两个点
 		Point point(it->second.x, it->second.y, it->second.z);
-		if (flag[point] || point == CurrentE.getPointStart() || point == CurrentE.getPointEnd())
+		if (flag[point] || point == pi || point == pj || point == pk)
 			it = result.erase(it);
 		else
 			++it;
@@ -565,46 +649,67 @@ void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Po
 		else
 			i++;
 	}
-	Point pa = ActiveE[(i - 1 + ActiveE.size() )% ActiveE.size()].getPointStart();
-	Point pb = ActiveE[(i + 1 + ActiveE.size() )% ActiveE.size()].getPointEnd();
+	Point pa = ActiveE[(i - 1 + ActiveE.size()) % ActiveE.size()].getPointStart();
+	Point pb = ActiveE[(i + 1 + ActiveE.size()) % ActiveE.size()].getPointEnd();
+	CVector vec; //pi->pj->pk的法向量
+	Common::CalNormalVector(pi, pj, pk, vec);
 
 	//边角度约束简化
-	CVector p_ia(pa._x - pi._x, pa._y - pi._y, pa._z - pi._z);
-	CVector p_ij(pj._x - pi._x, pj._y - pi._y, pj._z - pi._z);
-	CVector p_jb(pb._x - pj._x, pb._y - pj._y, pb._z - pj._z);
-	CVector p_ji(pi._x - pj._x, pi._y - pj._y, pi._z - pj._z);
-
-	float angle_ia_ij = p_ia.vectorInnerProduct(p_ia, p_ij) / (p_ia.vectorMag(p_ia) * p_ia.vectorMag(p_ij));
-	float angle_jb_ji = p_jb.vectorInnerProduct(p_jb, p_ji) / (p_jb.vectorMag(p_jb) * p_jb.vectorMag(p_ji));
-	
-	float angleA = max(angle_ia_ij, - (float)pow(2, 0.5) / 2);
-	float angleB = max(angle_jb_ji, - (float)pow(2, 0.5) / 2);
-
 	float angle = 0.0f;
+
+	CVector p_ij(pj._x - pi._x, pj._y - pi._y, pj._z - pi._z);
+	CVector p_ia(pa._x - pi._x, pa._y - pi._y, pa._z - pi._z);
+	float angle_ij_ia_cos = CVector::vectorInnerProduct(p_ij, p_ia) / (p_ij.vectorMag(p_ij) * p_ia.vectorMag(p_ia));
+
+	CVector f = CVector::Multiplication(p_ij, p_ia); //ij与ia所在平面的法向量
+	float f_vec = (CVector::vectorInnerProduct(f, vec) / (f.vectorMag(f) * vec.vectorMag(vec)));
+
+	if (f_vec >= 0)
+		angle = 360 - acos(angle_ij_ia_cos);
+	else
+		angle = acos(angle_ij_ia_cos);
+
+
 	float angle1 = 0.0f;
+
+	CVector p_ji(pi._x - pj._x, pi._y - pj._y, pi._z - pj._z);
+	CVector p_jb(pb._x - pj._x, pb._y - pj._y, pb._z - pj._z);
+	float angle_ji_jb_cos = CVector::vectorInnerProduct(p_ji, p_jb) / (p_ji.vectorMag(p_ji) * p_jb.vectorMag(p_jb));
+
+	CVector f1 = CVector::Multiplication(p_ji, p_jb); //ib与ji所在平面的法向量
+	float f1_vec = CVector::vectorInnerProduct(f1, vec) / (f1.vectorMag(f1) * vec.vectorMag(vec));
+
+	if (f1_vec <= 0)
+		angle1 = 360 - acos(angle_ji_jb_cos);
+	else
+		angle1 = acos(angle_ji_jb_cos);
+
+	float angleA = min(angle, 135.0f);
+	float angleB = min(angle1, 135.0f);
 
 	for (auto it = result.begin(); it != result.end();)
 	{
-		int resultSize = result.size(); 
+		//int resultSize = result.size(); 
 		Point candidateP;
 		candidateP._x = it->second.x;
 		candidateP._y = it->second.y;
 		candidateP._z = it->second.z;
 
 		CVector p_icandidateP(candidateP._x - pi._x, candidateP._y - pi._y, candidateP._z - pi._z);
-		CVector p_jcandidateP(candidateP._x - pj._x, candidateP._y - pj._y, candidateP._z - pj._z);
+		float angle_ij_icandidateP_cos = CVector::vectorInnerProduct(p_ij, p_icandidateP) / (p_ij.vectorMag(p_ij) * p_icandidateP.vectorMag(p_icandidateP));
+		angle = acos(angle_ij_icandidateP_cos);
 
-		angle = p_ij.vectorInnerProduct(p_ij, p_icandidateP) / (p_ij.vectorMag(p_ij) * p_ij.vectorMag(p_icandidateP));
-		angle1 = p_ji.vectorInnerProduct(p_ji, p_jcandidateP) / (p_ji.vectorMag(p_ji) * p_ji.vectorMag(p_jcandidateP));
-		if (angle < angleA || angle1 < angleB)
+		CVector p_jcandidateP(candidateP._x - pj._x, candidateP._y - pj._y, candidateP._z - pj._z);
+		float angle_ji_jcandidateP_cos = CVector::vectorInnerProduct(p_ji, p_jcandidateP) / (p_ji.vectorMag(p_ji) * p_jcandidateP.vectorMag(p_jcandidateP));
+		angle1 = acos(angle_ji_jcandidateP_cos);
+
+		if (angle >= angleA || angle1 >= angleB)
 			it = result.erase(it);
 		else
 			it++;
 	}
-	
-	//面角度约束简化
-	CVector vec;
-	Common::CalNormalVector(pi, pj, pk, vec);
+
+	//面角度约束简化 
 	for (auto iter = result.begin(); iter != result.end();)
 	{
 		Point candidateP;
@@ -614,8 +719,13 @@ void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Po
 
 		CVector newVec;
 		Common::CalNormalVector(pi, candidateP, pj, newVec);
-		angle = vec.vectorInnerProduct(vec, newVec) / (vec.vectorMag(vec) * vec.vectorMag(newVec));
-		if (angle < -pow(3, 0.5) / 2)
+		float angle_cos = CVector::vectorInnerProduct(vec, newVec) / (vec.vectorMag(vec) * newVec.vectorMag(newVec));
+		if (angle_cos > 1)
+			angle_cos = 1;
+		else if (angle_cos < -1)
+			angle_cos = -1;
+
+		if (acos(angle_cos) > 120.0f)
 			iter = result.erase(iter);
 		else
 			iter++;
@@ -625,7 +735,7 @@ void  Common::findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Po
 
 
 //选择最佳点
-Point Common::FindBestPoint(Point pi, Point pj, Point pk, std::vector<std::pair< double, pcl::PointXYZ>> &result, CLine CurrentE, std::list<CFace> &ST, std::vector<CLine> InnerE, std::map<Point, bool> &flag)
+void Common::FindBestPoint(Point pi, Point pj, Point pk, std::vector<std::pair< double, pcl::PointXYZ>> &result, CLine CurrentE, std::list<CFace> &ST, std::vector<CLine> InnerE, std::map<Point, bool> &flag, std::vector<Point> &bestPoints)
 {
 	// TODO: 在此处添加实现代码.
 	CVector vec; //当前活动边所在三角形的法向量
@@ -722,39 +832,38 @@ Point Common::FindBestPoint(Point pi, Point pj, Point pk, std::vector<std::pair<
 		else
 		{
 			bestP = pc;
-			break;
+			bestPoints.push_back(bestP);
 		}			
 	}
 
-	//检测是否有冗余点
-	CVector vec_new;
-	CalNormalVector(pi, pj, bestP, vec_new);
+	////检测是否有冗余点
+	//CVector vec_new;
+	//CalNormalVector(pi, pj, bestP, vec_new);
 
-	a = vec_new.GetX();
-	b = vec_new.GetY();
-	c = vec_new.GetZ();
-	float d = -a * pi._x - b * pi._y - c * pi._z;
+	//a = vec_new.GetX();
+	//b = vec_new.GetY();
+	//c = vec_new.GetZ();
+	//float d = -a * pi._x - b * pi._y - c * pi._z;
 
-	for (auto it = result.begin(); it != result.end(); it++)
-	{
-		if ((it->second.x == bestP._x) 
-		&& (it->second.y == bestP._y)
-		&& (it->second.z == bestP._z))
-			continue;
-		Point  spatialpoint;;
-		spatialpoint._x = it->second.x;
-		spatialpoint._y = it->second.y;
-		spatialpoint._z = it->second.z;
-		Point subpoint; //投影点
-		subpoint._x = ((b * b + c * c) * spatialpoint._x - a * (b * spatialpoint._y + c * spatialpoint._z + d)) / (a * a + b * b + c * c);
-		subpoint._y = b / a * (subpoint._x - spatialpoint._x) + spatialpoint._y;
-		subpoint._z = c / a * (subpoint._x - spatialpoint._x) + spatialpoint._z;
+	//for (auto it = result.begin(); it != result.end(); it++)
+	//{
+	//	if ((it->second.x == bestP._x) 
+	//	&& (it->second.y == bestP._y)
+	//	&& (it->second.z == bestP._z))
+	//		continue;
+	//	Point  spatialpoint;;
+	//	spatialpoint._x = it->second.x;
+	//	spatialpoint._y = it->second.y;
+	//	spatialpoint._z = it->second.z;
+	//	Point subpoint; //投影点
+	//	subpoint._x = ((b * b + c * c) * spatialpoint._x - a * (b * spatialpoint._y + c * spatialpoint._z + d)) / (a * a + b * b + c * c);
+	//	subpoint._y = b / a * (subpoint._x - spatialpoint._x) + spatialpoint._y;
+	//	subpoint._z = c / a * (subpoint._x - spatialpoint._x) + spatialpoint._z;
 
-		//判断投影点是否在三角形内
-		if (TriangleIncludeSubpoint(pi, pj, bestP, subpoint))
-			flag[spatialpoint] = true; //当前点设置为自由点/排除点
-	}
-	return bestP;
+	//	//判断投影点是否在三角形内
+	//	if (TriangleIncludeSubpoint(pi, pj, bestP, subpoint))
+	//		flag[spatialpoint] = true; //当前点设置为自由点/排除点
+	//}
 }
 
 
@@ -798,17 +907,33 @@ bool Common::IntersectTriangle(Point pi, Point pj, Point pc, std::list<CFace> ST
 	std::vector<CLine> lines;
 	for (auto it = ST.begin(); it != ST.end(); it++)
 	{
-		if (it->GetPoint1() == pi || it->GetPoint1() == pj)
+		if (it->GetPoint1() == pi)
 		{
 			CLine line(it->GetPoint2(), it->GetPoint3());
 			lines.push_back(line);
 		}
-		else if (it->GetPoint2() == pi || it->GetPoint2() == pj)
+		else if (it->GetPoint2() == pi)
 		{
 			CLine line(it->GetPoint3(), it->GetPoint1());
 			lines.push_back(line);
 		}
-		else if (it->GetPoint3() == pi || it->GetPoint3() == pj)
+		else if (it->GetPoint3() == pi)
+		{
+			CLine line(it->GetPoint1(), it->GetPoint2());
+			lines.push_back(line);
+		}
+
+		if (it->GetPoint1() == pj)
+		{
+			CLine line(it->GetPoint2(), it->GetPoint3());
+			lines.push_back(line);
+		}
+		else if (it->GetPoint2() == pj)
+		{
+			CLine line(it->GetPoint3(), it->GetPoint1());
+			lines.push_back(line);
+		}
+		else if (it->GetPoint3() == pj)
 		{
 			CLine line(it->GetPoint1(), it->GetPoint2());
 			lines.push_back(line);
@@ -899,12 +1024,15 @@ float Common::TriangleArea(Point A, Point B, Point C)
 
 
 // 更新活动链表
-void Common::UpdateActiveList(std::vector<CLine> &ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> &InnerE, std::vector<Point> &FreeP, std::vector<Point> &ActiveP, std::map<Point, bool> &flag, std::list<CFace> &ST)
+void Common::UpdateActiveList(std::vector<CLine> &ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> &InnerE, std::vector<Point> &FreeP, std::vector<Point> &ActiveP, std::map<Point, bool> &flag, std::list<CFace> &ST, std::vector<std::pair< double, pcl::PointXYZ>> &result)
 {
 	// 判断最佳点添加的位置
 	CFace f(CurrentE.getPointStart(), CurrentE.getPointEnd(), bestP);
 	ST.push_back(f); //添加三角面片
+	AddFixedPoint(flag, f, result);
 	int type = BestPositionType(ActiveE, CurrentE, bestP, FreeP);
+	//int type = BestPositionType(ActiveE, CurrentE, bestP, FreeP, ActiveP, InnerE,flag);
+
 	switch (type)
 	{
 	case 0:
@@ -917,7 +1045,7 @@ void Common::UpdateActiveList(std::vector<CLine> &ActiveE, CLine CurrentE, Point
 		UpdateMode2(ActiveE, CurrentE, bestP, InnerE, ActiveP, flag);
 		break;
 	case 3:
-		UpdateMode3(ActiveE, CurrentE, bestP, InnerE, ActiveP, flag, ST);
+		UpdateMode3(ActiveE, CurrentE, bestP, InnerE, ActiveP, flag, ST, result);
 		break;
 	default:
 		break;
@@ -953,15 +1081,90 @@ int Common::BestPositionType(std::vector<CLine> ActiveE, CLine CurrentE, Point b
 	}
 	else
 	{
-		front = --its;
+		front = (its--);
 		its++;
-		behind = ++its;
+		behind = (++its);
 	}
 	if (front->getPointStart() == bestP)
 		return 1;
 	if (front->getPointEnd() == bestP)
 		return 2;
 	return 3;
+}
+
+int Common::BestPositionType(std::vector<CLine> &ActiveE, CLine &CurrentE, const Point &bestP, std::vector<Point> &FreeP, std::vector<Point> &ActiveP, std::vector<CLine> &InnerE, std::map<Point, bool> &flag)
+{
+	int num = 0;
+	int j = 0;
+	std::vector<Point>::iterator it;
+	it = std::find(FreeP.begin(), FreeP.end(), bestP);
+	if (it != FreeP.end()) //最佳点是自由点
+		return 0;
+	it = std::find(ActiveP.begin(), ActiveP.end(), bestP);
+	if (it != ActiveP.end() ){
+		
+		
+		auto iter = std::find(ActiveE.begin(), ActiveE.end(), CLine(bestP, CurrentE.getPointStart()));
+		if (iter != ActiveE.end())
+		{
+			j++;
+			num = 1;
+		}
+		iter = std::find(ActiveE.begin(), ActiveE.end(), CLine(CurrentE.getPointEnd(), bestP));
+		if (iter != ActiveE.end())
+		{
+			j++;
+			num = 2;
+		}
+	}
+
+	if (j == 1)		//	最佳点在活动边上，情况二
+	{
+		if (num == 1)
+		{
+			//	更新活动边
+			auto it = std::find(ActiveE.begin(), ActiveE.end(), CurrentE);
+			it = ActiveE.erase(it);
+			it = std::find(ActiveE.begin(), ActiveE.end(), CLine(bestP, CurrentE.getPointStart()));
+			it = ActiveE.erase(it);
+			ActiveE.insert(it, CLine(bestP, CurrentE.getPointEnd()));
+			//	更新活动点
+			ActiveP.erase(std::find(ActiveP.begin(), ActiveP.end(), CurrentE.getPointStart()));
+			//	更新固定点
+			auto iter = flag.find(CurrentE.getPointStart());
+			iter->second = true;
+			//	更新固定边
+			InnerE.push_back(CurrentE);
+			InnerE.push_back(CLine(bestP, CurrentE.getPointStart()));
+
+
+		}
+		else
+		{
+			auto it = std::find(ActiveE.begin(), ActiveE.end(), CurrentE);
+			it = ActiveE.erase(it);
+			it = std::find(ActiveE.begin(), ActiveE.end(), CLine(CurrentE.getPointEnd(), bestP));
+			it = ActiveE.erase(it);
+			ActiveE.insert(it, CLine(CurrentE.getPointStart(), bestP));
+			//	更新活动点
+			ActiveP.erase(std::find(ActiveP.begin(), ActiveP.end(), CurrentE.getPointEnd()));
+			//	更新固定点
+			auto iter = flag.find(CurrentE.getPointEnd());
+			iter->second = true;
+			//	更新固定边
+			InnerE.push_back(CurrentE);
+			InnerE.push_back(CLine(CurrentE.getPointEnd(), bestP));
+		}
+
+		return 7;
+	}
+	else if (j == 0)	//	孔洞情况
+		return 3;
+	else
+	{
+		return -1;			//	错误情况发生
+
+	}
 }
 
 
@@ -1002,8 +1205,6 @@ void Common::UpdateMode1(std::vector<CLine> &ActiveE, CLine CurrentE, Point best
 	CLine line(bestP, CurrentE.getPointEnd());
 	ActiveE.insert(it, line);
 	ActiveE.erase(it);
-	
-	flag[CurrentE.getPointStart()] = true;
 }
 
 
@@ -1025,26 +1226,23 @@ void Common::UpdateMode2(std::vector<CLine> &ActiveE, CLine CurrentE, Point best
 	CLine line(CurrentE.getPointStart(), bestP);
 	ActiveE.insert(it, line);
 	ActiveE.erase(it);
-
-	flag[CurrentE.getPointEnd()] = true;
 }
 
 
 //最佳点位于活动边上且与当前活动边没有相邻关系
-void Common::UpdateMode3(std::vector<CLine> &ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> &InnerE, std::vector<Point> &ActiveP, std::map<Point, bool> &flag, std::list<CFace> &ST)
+void Common::UpdateMode3(std::vector<CLine> &ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> &InnerE, std::vector<Point> &ActiveP, std::map<Point, bool> &flag, std::list<CFace> &ST, std::vector<std::pair< double, pcl::PointXYZ>> &result)
 {
 	// TODO: 在此处添加实现代码.
 	std::vector<CLine>::iterator it = find(ActiveE.begin(), ActiveE.end(), CurrentE);
+	InnerE.push_back(*it);
 	std::vector<CLine>::iterator its = it;
 	int holeSide_count = 1;
-
+	if (its == ActiveE.end())
+		its = ActiveE.begin();
+	else
+		its++;
 	while (its->getPointEnd() != bestP)
 	{
-		if (its == ActiveE.end())
-			its = ActiveE.begin();
-		else
-			its++;
-		holeSide_count++;
 		InnerE.push_back(*its);
 		std::vector<Point>::iterator iter = find(ActiveP.begin(), ActiveP.end(), its->getPointEnd());
 		iter = ActiveP.erase(iter);
@@ -1053,15 +1251,45 @@ void Common::UpdateMode3(std::vector<CLine> &ActiveE, CLine CurrentE, Point best
 		{
 			CFace f(its->getPointStart(), its->getPointEnd(), CurrentE.getPointEnd());
 			ST.push_back(f);
+			Common::AddFixedPoint(flag, f, result);
+			CLine l(its->getPointEnd(), CurrentE.getPointEnd());
+			InnerE.push_back(l);
 		}
+		holeSide_count++;
+		if (its == ActiveE.end())
+			its = ActiveE.begin();
+		else
+			its++;
 	}
-	CFace ff(its->getPointStart(), bestP, CurrentE.getPointEnd());
-	ST.push_back(ff);
-	flag[CurrentE.getPointEnd()] = true;
+	if (holeSide_count > 1)
+	{
+		CFace ff(its->getPointStart(), bestP, CurrentE.getPointEnd());
+		ST.push_back(ff);
+		Common::AddFixedPoint(flag, ff, result);
+	}
+	else
+		InnerE.push_back(*its);
 
-	ActiveE.erase(it, its);
+	its = ActiveE.erase(it, its);
+	its = ActiveE.erase(its);
 	CLine l(CurrentE.getPointStart(), bestP);
-	ActiveE.push_back(l);
+	ActiveE.insert(its, l);
 }
 
 //>>>>>>> origin/dev_hhy
+
+//去除排除点
+void Common::AddFixedPoint(std::map<Point, bool> &flag, CFace face, std::vector<std::pair< double, pcl::PointXYZ>> &result)
+{
+	// TODO: 在此处添加实现代码.
+	Point p1 = face.GetPoint1();
+	Point p2 = face.GetPoint2();
+	Point p3 = face.GetPoint3();
+	for (auto it = result.begin(); it != result.end(); it++)
+	{
+		Point p(it->second.x, it->second.y, it->second.z);
+		//判断点是否在面片face中
+		if (p != p1 && p != p2 && p != p3 && TriangleIncludeSubpoint(p1, p2, p3, p))
+			flag[p] = true;
+	}
+}

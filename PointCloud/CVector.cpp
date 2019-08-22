@@ -92,3 +92,14 @@ float CVector::MultiplicationCross(const CVector &vector)
 	return len1 / len;
 //>>>>>>> origin/dev_hhy
 }
+
+// 两向量叉乘
+CVector CVector::Multiplication(const CVector &vector1, const CVector &vector)
+{
+	// TODO: 在此处添加实现代码.
+	float normalx, normaly, normalz;
+	normalx = (vector1.GetY()*vector.GetZ() - vector1.GetZ()*vector.GetY());
+	normaly = (vector1.GetZ()*vector.GetX() - vector1.GetX() *vector.GetZ());
+	normalz = (vector1.GetX()*vector.GetY() - vector1.GetY() *vector.GetX());
+	return CVector(normalx, normaly, normalz);
+}

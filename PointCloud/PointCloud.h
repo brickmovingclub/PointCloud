@@ -13,12 +13,16 @@ class PointCloud : public QMainWindow
 public:
 	PointCloud(QWidget *parent = Q_NULLPTR);
 	pcl::PointCloud<pcl::PointNormal>::Ptr getPointNormal();
+	void ColorfulCloud();
 
 private:	
 	Ui::PointCloudClass ui;
 	
 	pcl::visualization::PCLVisualizer::Ptr _viewer;
 	pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud;
+	pcl::PointCloud<pcl::RGB>::Ptr pPointsRGB;
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr pCloudShow;
+
 	PCLViewer _pclViewer;
 
 public:

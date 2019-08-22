@@ -21,6 +21,10 @@ public:
 		return ABS(a - b) < std::numeric_limits<A>::epsilon();
 	}
 	
+	//	保留小数点后几位
+	static float Round(const float &src, const int &bits);
+	//	计算pcl的半径R
+	static double CalRadius(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
 	//	求空间平面的法向量
 	static bool CalNormalVector(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3,float &dx, float &dy, float &dz);
 	static void CalNormalVector(const Point &p1, const Point &o2, const Point &p3, CVector &vector);
@@ -32,7 +36,7 @@ public:
 	static bool Condition_a_b(pcl::PointXYZ pi, pcl::PointXYZ pj, pcl::PointXYZ pk, std::vector<std::pair<double, pcl::PointXYZ>> &near_pi);
 
 	//	半径领域点集搜索
-	static void NearRadiusSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,const pcl::PointXYZ &point, const float &radius, std::vector<std::pair< double, pcl::PointXYZ>> &nearPoint);
+	static void NearRadiusSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::PointCloud<pcl::RGB>::Ptr &pPointsRGB, const pcl::PointXYZ &point, const float &radius, std::vector<std::pair< double, pcl::PointXYZ>> &nearPoint);
 
 	//	k 近邻搜索
 	static void KNearSearch(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, const pcl::PointXYZ &searchPoint, const int &k, std::vector<std::pair< double, pcl::PointXYZ>> &KnearPoint);
@@ -43,7 +47,7 @@ public:
 
 	//	pcl 绘制线条
 	static void PCLDrawLine(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::visualization::PCLVisualizer::Ptr viewer, std::list<CFace> &ST);
-
+	static void PCLDrawLine(QString &faceName, pcl::visualization::PCLVisualizer::Ptr viewer, const CFace &face, const QColor &color);
 	//	寻找包含pointi、pointj中的三角面片中的第三个点
 	static Point GetOtherPoint(const Point &pointi, const Point &pointj,std::list<CFace> &ST);
 //>>>>>>> origin/dev_hhy
@@ -51,10 +55,12 @@ public:
 
 //=======
 	//选择候选点集
-	static void  findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, Point pi, Point pj, Point pk, std::map<Point, bool> flag, std::vector<CLine> ActiveE, CLine CurrentE, std::vector<std::pair< double, pcl::PointXYZ>> &result);
+	static void  findCandidatePoints(pcl::PointCloud<pcl::PointXYZ>::Ptr _cloud, pcl::PointCloud<pcl::RGB>::Ptr &pPointsRGB, Point pi, Point pj, Point pk, std::map<Point, bool> flag, std::vector<CLine> ActiveE, CLine CurrentE, std::vector<std::pair< double, pcl::PointXYZ>> &result);
 	
+	// 去除冗余点
+	static void RemoveRedundantPoints(Point pi, Point pj, Point bestP, std::map<Point, bool> &flag, std::vector<std::pair< double, pcl::PointXYZ>> &result);
 	//选择最佳点
-	static Point FindBestPoint(Point pi, Point pj, Point pk, std::vector<std::pair< double, pcl::PointXYZ>> &result, CLine CurrentE, std::list<CFace> &ST, std::vector<CLine> InnerE, std::map<Point, bool> &flag);
+	static void  FindBestPoint(Point pi, Point pj, Point pk, std::vector<std::pair< double, pcl::PointXYZ>> &result, CLine CurrentE, std::list<CFace> &ST, std::vector<CLine> InnerE, std::map<Point, bool> &flag,std::vector<Point> &bestPoints);
 	
 	// 寻找点的邻接三角形,并判断是否共边
 	static bool findNearFace_Point(CFace curFace, Point pc, std::list<CFace> ST);
@@ -75,10 +81,12 @@ public:
 	static float TriangleArea(Point A, Point B, Point C);
 	
 	// 更新活动链表
-	static void UpdateActiveList(std::vector<CLine> &ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> &InnerE, std::vector<Point> &FreeP, std::vector<Point> &ActiveP, std::map<Point, bool> &flag, std::list<CFace> &ST);
+	static void UpdateActiveList(std::vector<CLine> &ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> &InnerE, std::vector<Point> &FreeP, std::vector<Point> &ActiveP, std::map<Point, bool> &flag, std::list<CFace> &ST, std::vector<std::pair< double, pcl::PointXYZ>> &result);
 	
 	// 判断最佳点添加的位置类型
 	static int BestPositionType(std::vector<CLine> ActiveE, CLine CurrentE, Point bestP, std::vector<Point> FreeP);
+	static int BestPositionType(std::vector<CLine> &ActiveE, CLine &CurrentE, const Point &bestP, std::vector<Point> &FreeP,std::vector<Point> &ActiveP, std::vector<CLine> &InnerE,std::map<Point, bool> &flag);
+
 	
 	/*************************更新活动链表*************************************/	
 	// 最佳点是自由点
@@ -91,7 +99,8 @@ public:
 	static void UpdateMode2(std::vector<CLine> &ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> &InnerE, std::vector<Point> &ActiveP, std::map<Point, bool> &flag);
 	
 	//最佳点位于活动边上且与当前活动边没有相邻关系
-	static void UpdateMode3(std::vector<CLine> &ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> &InnerE, std::vector<Point> &ActiveP, std::map<Point, bool> &flag, std::list<CFace> &ST);
-//>>>>>>> origin/dev_hhy
+	static void UpdateMode3(std::vector<CLine> &ActiveE, CLine CurrentE, Point bestP, std::vector<CLine> &InnerE, std::vector<Point> &ActiveP, std::map<Point, bool> &flag, std::list<CFace> &ST, std::vector<std::pair< double, pcl::PointXYZ>> &result);
+	static void Common::AddFixedPoint(std::map<Point, bool> &flag, CFace face, std::vector<std::pair< double, pcl::PointXYZ>> &result);
+	//>>>>>>> origin/dev_hhy
 };
 

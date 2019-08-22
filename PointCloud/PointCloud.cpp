@@ -11,6 +11,7 @@
 #include "KNearWidget.h"
 
 #include "PointCloud.h"
+#define __DEBUG__ 1
 
 PointCloud::PointCloud(QWidget *parent)
 	: QMainWindow(parent),_cloud(NULL),_viewer(NULL)
@@ -20,7 +21,9 @@ PointCloud::PointCloud(QWidget *parent)
 
 	// Setup the cloud pointer
 	_cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
-	
+	pPointsRGB.reset(new pcl::PointCloud<pcl::RGB>);
+	pCloudShow.reset(new pcl::PointCloud<pcl::PointXYZRGBA>);
+
 	// Set up the QVTK window
 	_viewer.reset(new pcl::visualization::PCLVisualizer("viewer", false));
 	ui.qvtkWidget->SetRenderWindow(_viewer->getRenderWindow());
@@ -67,12 +70,34 @@ void PointCloud::OnReadFile()
 	pcl::PCLPointCloud2 cloud_blob;
 	pcl::io::loadPCDFile(tempFileName.string(), cloud_blob);
 	pcl::fromPCLPointCloud2(cloud_blob, *_cloud);
-	_viewer->addPointCloud<pcl::PointXYZ>(_cloud, "cloud");
 
+
+	pPointsRGB->width = _cloud->size();
+	pPointsRGB->height = 1;
+	pPointsRGB->resize(pPointsRGB->width * pPointsRGB->height);
+
+	for (size_t i = 0; i < pPointsRGB->size(); i++)
+	{
+		pPointsRGB->points[i].r = 255;
+		pPointsRGB->points[i].g = 255;
+		pPointsRGB->points[i].b = 255;
+
+	}
+
+
+	pCloudShow->width = _cloud->size();
+	pCloudShow->height = 1;
+	pCloudShow->resize(pPointsRGB->width * pPointsRGB->height);
+
+	// 合并不同字段
+	pcl::concatenateFields(*_cloud, *pPointsRGB, *pCloudShow);
+	_viewer->addPointCloud<pcl::PointXYZRGBA>(pCloudShow, "cloud");
+
+	//_viewer->addPointCloud<pcl::PointXYZ>(_cloud, "cloud");
+	_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud"); // 设置点云大小
 	ui.qvtkWidget->update();
-//	_viewer->addPointCloud(_cloud, "cloud");
 //	_viewer->resetCamera();
-	//ui.qvtkWidget->update();
+
 }
 
 
@@ -183,7 +208,10 @@ pcl::PointCloud<pcl::PointNormal>::Ptr PointCloud::getPointNormal()
 	
 }
 
+void PointCloud::ColorfulCloud()
+{
 
+}
 //打开pcd文件
 void PointCloud::open_pcd_file()
 {
@@ -381,11 +409,9 @@ void PointCloud::Triangulation()
 	int i = 1; int j = 0;
 
 	int pointsize = _cloud->points.size();
-	pcl::PointXYZ min;//用于存放三个轴的最小值
-	pcl::PointXYZ max;//用于存放三个轴的最大值
-	pcl::getMinMax3D(*_cloud, min, max);
-	double temp = (double)(((max.x - min.x)*(max.y - min.y)*(max.z - min.z) / _cloud->points.size()) );
-	double radius = sqrt(temp);	//	搜索半径r
+	
+	//	计算搜索半径R
+	double radius = Common::CalRadius(_cloud);
 
 	//	1、求种子三角形
 	pcl::PointXYZ pk;		// 默认点云中的第一个点为随机点,第一个点不合适，则自增
@@ -397,7 +423,9 @@ void PointCloud::Triangulation()
 		std::vector<std::pair< double, pcl::PointXYZ>>	nearPoint;	//	领域点集(double：距离， pcl::PointXYZ：领域点)
 		//pcl::PointXYZ origin(0, 0, 0);
 
-		Common::NearRadiusSearch(_cloud, pk, radius , nearPoint);		//	提醒：领域点集中的第一个点为查找的点（pk）
+		Common::NearRadiusSearch(_cloud, pPointsRGB, pk, radius *5, nearPoint);		//	提醒：领域点集中的第一个点为查找的点（pk）
+		
+
 		if (!nearPoint.empty())
 		{
 			std::sort(nearPoint.begin(), nearPoint.end(), [&](const std::pair< double, pcl::PointXYZ> &Pair1, const std::pair< double, pcl::PointXYZ> &Pair2) {return (Pair1.first < Pair2.first ? true : false); });//	按领域点到当前点的距离从小到大排序
@@ -423,7 +451,7 @@ void PointCloud::Triangulation()
 						nearPointBack.push_back(iter);
 				}
 
-				if (!Common::Condition_a_b(pi, pj, pk, nearPointBack))	//	检测选取得三点是否在同一直线上或经过三点得圆内不包含领域中的其它点
+				if (Common::Condition_a_b(pi, pj, pk, nearPointBack))	//	检测选取得三点是否在同一直线上或经过三点得圆内不包含领域中的其它点
 				{
 					float dx, dy, dz;
 					CVector vector;
@@ -449,9 +477,8 @@ void PointCloud::Triangulation()
 	} while (j < _cloud->points.size());
 	
 
-	//Common::PCLDrawLine(_cloud, _viewer, activeList);
 
-
+//#ifndef __DEBUG__
 	// 更新自由点
 	Point ppi(pi.x,pi.y,pi.z), ppj(pj.x,pj.y,pj.z), ppk(pk.x,pk.y,pk.z);
 	for (int i = 0; i < _cloud->points.size(); ++i)
@@ -472,8 +499,10 @@ void PointCloud::Triangulation()
 	// 将种子三角形加入到三角网格
 	CFace face(pi, pj, pk);
 	ST.push_back(face);
+	//Common::PCLDrawLine(_cloud, _viewer, activeList);
+	Common::PCLDrawLine(_cloud, _viewer, ST);
 
-	do
+	while (itercurretntE != activeList.end())
 	{
 		// 初始化当前边
 		CurrentE = *itercurretntE;
@@ -484,27 +513,49 @@ void PointCloud::Triangulation()
 		// 查找精简后选点集
 		std::vector<std::pair< double, pcl::PointXYZ>> result; 
 
- 		Common::findCandidatePoints(_cloud, pointi, pointj, pointk, flag, activeList, CurrentE, result);
+
+ 		Common::findCandidatePoints(_cloud, pPointsRGB,pointi, pointj, pointk, flag, activeList, CurrentE, result);
 		if (result.size() > 0)
 		{
 			// 筛选最佳节点
+			std::vector<Point> bestPoints;
 			Point bestP;
-			bestP =  Common::FindBestPoint(pointi, pointj, face.GetOtherPoint(pointi, pointj), result, CurrentE, ST, InnerE, flag);
-			if (bestP._x == 0 && bestP._y == 0 && bestP._z == 0)
+			Common::FindBestPoint(pointi, pointj, face.GetOtherPoint(pointi, pointj), result, CurrentE, ST, InnerE, flag, bestPoints);
+			//	检测冗余点
+			Common::RemoveRedundantPoints(pointi, pointj, bestP, flag, result);		// 需要修改
+			if(bestPoints.empty())
+			//if (bestP._x == 0 && bestP._y == 0 && bestP._z == 0)
 				itercurretntE++;
 			else
 			{
 				//	更新活动边表
-				Common::UpdateActiveList(activeList, CurrentE, bestP, InnerE, FreeP, ActiveP, flag, ST);
-				Common::PCLDrawLine(_cloud, _viewer, ST);
+				Common::UpdateActiveList(activeList, CurrentE, bestP, InnerE, FreeP, ActiveP, flag, ST, result);
+				std::cout << "************************************" << std::endl;
+				std::cout << pointi._x << "\t" << pointi._y << "\t" << pointi._z << std::endl;
+				std::cout << pointj._x << "\t" << pointj._y << "\t" << pointj._z << std::endl;
+				std::cout << "------------------------------------" << std::endl;
+				for (auto iiiii = activeList.begin(); iiiii != activeList.end(); iiiii++)
+				{
+					std::cout << iiiii->getPointStart()._x << "\t" << iiiii->getPointStart()._y << "\t" << iiiii->getPointStart()._z << std::endl;
+					std::cout << iiiii->getPointEnd()._x << "\t" << iiiii->getPointEnd()._y << "\t" << iiiii->getPointEnd()._z << std::endl;
+				}
+
+				std::cout << "************************************" << std::endl;
+				//Common::PCLDrawLine(_cloud, _viewer, ST);
+				//Common::PCLDrawLine(QString("face2"), _viewer, CFace(CurrentE.getPointStart(), CurrentE.getPointEnd(), bestP), QColor(0, 255, 0));
 
 				itercurretntE = activeList.begin();
 			}			
 		}
 		else
 			itercurretntE++;
-	}while(itercurretntE != activeList.end());
-	
+	}
+//#else
+
+//#endif
+	Common::PCLDrawLine(_cloud, _viewer, ST);
+	//pcl::concatenateFields(*_cloud, *pPointsRGB, *pCloudShow);
+	//_viewer->addPointCloud<pcl::PointXYZRGBA>(pCloudShow, "cloud");
 	ui.qvtkWidget->update();
 
 }
